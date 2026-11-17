@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PEATGUARD — Model 3D Node Prototipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel:#ffffff; --ink:#18201c; --sub:#5c6862; --line:#e3e7e4; --soft:#f3f5f3;
+    --acc:#1f6f4a; --acc-soft:#e3f1e9; --sel:#1d5fd1;
+    --g-Struktur:#7b8580; --g-Energi:#c99a06; --g-Edge:#d0632a; --g-Sensing:#22895a; --g-Lingkungan:#2f74c9; --g-Uji:#7a52c7;
+    --shadow:0 1px 2px rgba(16,24,20,.06),0 8px 24px rgba(16,24,20,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#dfe4df}
+  button{font:inherit;color:inherit}
+  #stage{position:fixed;inset:0}
+  #c{display:block;width:100%;height:100%;touch-action:none;outline:none}
+  #c.pointer{cursor:pointer}
+
+  /* top bar */
+  #top{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;align-items:center;pointer-events:none;z-index:5}
+  #top>*{pointer-events:auto}
+  .title{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px;box-shadow:var(--shadow)}
+  .title b{display:block;font-size:13px;letter-spacing:.04em}
+  .title span{display:block;font-size:11.5px;color:var(--sub)}
+  .switch{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:var(--shadow)}
+  .switch button{border:0;background:none;padding:7px 12px;border-radius:7px;cursor:pointer;font-weight:600;font-size:13px;color:var(--sub)}
+  .switch button.on{background:var(--ink);color:#fff}
+  #help{margin-left:auto;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:13px;box-shadow:var(--shadow)}
+
+  /* component rail */
+  #rail{position:fixed;top:72px;left:12px;bottom:84px;width:272px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;z-index:4}
+  #rail header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:1px solid var(--line)}
+  #rail header b{font-size:13px}
+  #rail header small{color:var(--sub);font-size:12px;margin-left:6px;font-weight:500}
+  #rail header button{border:0;background:var(--soft);border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1}
+  #list{overflow:auto;padding:4px 6px 10px}
+  .grp{display:flex;align-items:center;gap:6px;padding:9px 8px 4px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
+  .grp::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--gc)}
+  .row{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+  .row:hover{background:var(--soft)}
+  .row.on{background:#e8f0fd;border-color:#bfd3f6}
+  .num{flex:none;display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:6px;background:var(--gc);color:#fff;font-size:11px;font-weight:700}
+  .row span{font-size:13px}
+
+  /* detail card */
+  #card{position:fixed;top:72px;right:12px;width:340px;max-height:calc(100% - 168px);display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:4}
+  #card[hidden]{display:none}
+  #card .hd{display:flex;gap:10px;align-items:flex-start;padding:12px 12px 8px 14px}
+  #card .hd .num{min-width:26px;height:26px;font-size:12px;margin-top:2px}
+  #card .hd h2{margin:0;font-size:15.5px;line-height:1.3}
+  #card .hd small{display:block;color:var(--sub);font-size:12px}
+  #card .hd button{margin-left:auto;border:0;background:var(--soft);border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:16px;flex:none}
+  #card .bd{overflow:auto;padding:0 14px 6px}
+  #card dt{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--sub);margin-top:10px}
+  #card dd{margin:3px 0 0;font-size:13.5px}
+  #card .note{margin:12px 0 4px;padding:9px 10px;border-radius:8px;background:#fff6dc;border:1px solid #f1df9c;font-size:12.5px;color:#5a4a10}
+  #card .ft{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+  #card .ft button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12.5px}
+  #card .ft .pos{color:var(--sub);font-size:12px;margin:0 auto}
+  #card label{display:flex;gap:7px;align-items:center;font-size:12.5px;color:var(--sub);padding:2px 14px 10px;cursor:pointer}
+
+  /* dock */
+  #dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:4px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:5px;z-index:5;max-width:calc(100% - 24px);overflow-x:auto}
+  .dg{display:flex;align-items:center;gap:2px}
+  .dg>em{font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);padding:0 6px 0 4px}
+  .dsep{width:1px;align-self:stretch;margin:4px 4px;background:var(--line)}
+  .db{display:inline-flex;align-items:center;gap:6px;border:0;background:none;border-radius:8px;padding:7px 9px;cursor:pointer;font-size:12.5px;font-weight:500;white-space:nowrap}
+  .db:hover{background:var(--soft)}
+  .db.on{background:var(--ink);color:#fff}
+  .db svg{width:16px;height:16px;flex:none}
+  .db.primary{background:var(--acc);color:#fff;font-weight:600}
+  .db.primary:hover{background:#185c3d}
+  .risk{display:inline-flex;gap:2px;background:var(--soft);border-radius:9px;padding:2px}
+  .risk button{border:0;background:none;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:12px;display:inline-flex;gap:5px;align-items:center}
+  .risk button i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .risk button.on{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+  body.bench .f-only{display:none!important}
+  body:not(.bench) .b-only{display:none!important}
+
+  /* bench banner */
+  #banner{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:9px 14px;max-width:520px;width:calc(100% - 660px);min-width:300px;z-index:3}
+  #banner b{font-size:13px}
+  #banner p{margin:2px 0 0;font-size:12.5px;color:var(--sub)}
+  #banner .row2{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  #banner .tag{font-size:11.5px;background:var(--soft);border-radius:6px;padding:2px 7px}
+
+  /* hotspots */
+  #hot{position:fixed;inset:0;pointer-events:none;z-index:2}
+  .hs{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;pointer-events:auto;cursor:pointer;border:0;padding:0;background:none;transform-origin:0 0}
+  .hs i{font-style:normal;display:grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:var(--gc);color:#fff;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+  .hs span{display:none;background:#fff;color:var(--ink);font-size:12.5px;font-weight:600;padding:3px 8px;border-radius:7px;box-shadow:0 1px 4px rgba(0,0,0,.25);white-space:nowrap}
+  .hs.open span{display:block}
+  .hs.sel i{background:var(--sel);transform:scale(1.12)}
+
+  #tip{position:fixed;z-index:6;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;padding:6px 9px;border-radius:7px;white-space:nowrap;display:none}
+  #tip small{color:#b9c4be;margin-left:6px}
+  #toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:min(560px,92vw);text-align:center;z-index:6}
+  #toast.show{opacity:1}
+  #hint{position:fixed;left:298px;bottom:84px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:12px;color:var(--sub);z-index:3;transition:opacity .4s}
+  #hint.gone{opacity:0;pointer-events:none}
+  #photoExit{position:fixed;top:12px;right:12px;z-index:7;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-size:13px;box-shadow:var(--shadow);display:none}
+  body.photo #photoExit{display:block}
+  body.photo #top,body.photo #rail,body.photo #card,body.photo #dock,body.photo #banner,body.photo #hot,body.photo #hint,body.photo #helpBox{display:none!important}
+  body.railoff #rail{display:none}
+  body.railoff #hint{left:12px}
+  #helpBox{position:fixed;top:64px;right:12px;width:300px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;z-index:6;font-size:13px}
+  #helpBox[hidden]{display:none}
+  #helpBox ul{margin:6px 0 0;padding-left:18px}
+  #helpBox li{margin:3px 0}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;color:var(--sub);font-weight:600;z-index:9;background:#dfe4df}
+
+  @media (max-width:900px){
+    #top .title span{display:none}
+    #help{display:none}
+    #rail{top:auto;left:8px;right:8px;width:auto;bottom:70px;max-height:52vh}
+    body:not(.railopen) #rail{display:none}
+    body.railoff #rail{display:none}
+    #card{top:auto;left:8px;right:8px;bottom:70px;width:auto;max-height:40vh}
+    #dock{left:8px;right:8px;transform:none;bottom:8px;overflow-x:auto;max-width:none}
+    .dg>em{display:none}
+    #banner{top:62px;width:auto;left:8px;right:8px;transform:none;min-width:0}
+    #hint{left:8px;bottom:70px}
+  }
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="loading">Memuat model 3D…</div>
+<div id="stage"><canvas id="c" tabindex="0"></canvas></div>
+<div id="hot"></div>
+
+<div id="top">
+  <div class="title"><b>PEATGUARD</b><span>Model 3D node prototipe · ESP32-S3 + SX1262</span></div>
+  <div class="switch" id="sceneSwitch">
+    <button data-scene="field" class="on">Node di lahan</button>
+    <button data-scene="bench">Uji arus di meja</button>
+  </div>
+  <button id="help">Cara pakai</button>
+</div>
+
+<div id="helpBox" hidden>
+  <b>Cara pakai</b>
+  <ul>
+    <li><b>Seret</b> untuk memutar, <b>gulir</b> atau cubit untuk zoom, <b>klik kanan + seret</b> untuk menggeser.</li>
+    <li><b>Arahkan kursor</b> ke bagian alat untuk melihat namanya, lalu <b>klik</b> untuk detail.</li>
+    <li>Saat sebuah bagian dipilih, bagian lain dipudarkan. Klik area kosong atau tekan <b>Esc</b> untuk kembali.</li>
+    <li><b>← / →</b> berpindah ke komponen sebelumnya/berikutnya.</li>
+    <li><b>Mode foto</b> menyembunyikan semua panel untuk tangkapan layar.</li>
+  </ul>
+</div>
+
+<aside id="rail">
+  <header><div><b>Komponen</b><small id="count"></small></div><button id="railClose" title="Sembunyikan">×</button></header>
+  <div id="list"></div>
+</aside>
+
+<section id="card" hidden>
+  <div class="hd"><span class="num" id="cNum"></span><div><small id="cGroup"></small><h2 id="cName"></h2></div><button id="cClose" aria-label="Tutup">×</button></div>
+  <div class="bd" id="cBody"></div>
+  <label><input type="checkbox" id="cIso" checked> Pudarkan bagian lain</label>
+  <div class="ft"><button id="cPrev">‹ Sebelumnya</button><span class="pos" id="cPos"></span><button id="cNext">Berikutnya ›</button></div>
+</section>
+
+<section id="banner" class="b-only">
+  <b id="bnTitle"></b>
+  <p id="bnWhat"></p>
+  <div class="row2"><span class="tag" id="bnRange"></span><span class="tag" id="bnRow"></span></div>
+</section>
+
+<nav id="dock">
+  <button class="db" id="bList"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h12"/></svg>Komponen</button>
+  <span class="dsep"></span>
+  <div class="dg" id="views"><em>Sudut</em></div>
+  <span class="dsep f-only"></span>
+  <div class="dg f-only"><em>Box</em>
+    <button class="db" data-lid="tutup">Tertutup</button>
+    <button class="db on" data-lid="buka">Terbuka</button>
+    <button class="db" data-lid="urai">Terurai</button>
+  </div>
+  <span class="dsep f-only"></span>
+  <div class="dg f-only"><em>Simulasi</em>
+    <div class="risk" id="risk"></div>
+    <button class="db primary" id="bSend">Kirim paket</button>
+  </div>
+  <span class="dsep b-only"></span>
+  <div class="dg b-only"><em>Mode uji</em>
+    <button class="db on" data-mode="sleep">Tidur</button>
+    <button class="db" data-mode="active">Aktif</button>
+    <button class="db" data-mode="tx">TX</button>
+    <button class="db" data-mode="rx">RX</button>
+    <button class="db" id="bJumper">Jumper</button>
+  </div>
+  <span class="dsep"></span>
+  <button class="db on" id="bMarkers" title="Tampilkan nomor penanda">Penanda</button>
+  <button class="db" id="bPhoto"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1.5" y="4" width="13" height="9.5" rx="2"/><circle cx="8" cy="8.7" r="2.6"/><path d="M5.5 4l1-2h3l1 2"/></svg>Mode foto</button>
+</nav>
+
+<div id="hint">Seret: putar · Gulir: zoom · Klik kanan + seret: geser · Klik bagian alat untuk detail</div>
+<div id="tip"></div>
+<div id="toast"></div>
+<button id="photoExit">Keluar mode foto (Esc)</button>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const PI = Math.PI;
+const SS = THREE.MathUtils.smoothstep;
+
+// ================================================================ renderer
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.92;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 200);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 0.08;
+controls.maxDistance = 16;
+
+const hemi = new THREE.HemisphereLight(0xf1f5ff, 0x4a3f2c, 0.35);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d8, 2.4);
+sun.position.set(4.5, 8, 5.5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -3.6, right: 3.6, top: 3.6, bottom: -3.6, near: 1, far: 22 });
+sun.shadow.bias = -0.0003;
+sun.shadow.normalBias = 0.012;
+scene.add(sun);
+
+// ================================================================ helpers
+function M(color, o = {}) {
+  const m = new THREE.MeshStandardMaterial({
+    color, roughness: o.r ?? 0.6, metalness: o.m ?? 0, map: o.map ?? null,
+    transparent: o.t ?? false, opacity: o.o ?? 1, side: o.side ?? THREE.FrontSide,
+    emissive: o.e ?? 0x000000, emissiveIntensity: o.ei ?? 1, depthWrite: o.dw ?? true,
+    flatShading: o.flat ?? false, alphaTest: o.at ?? 0, envMapIntensity: o.env ?? 1
+  });
+  return m;
+}
+function mesh(geo, mat, parent, pos = [0, 0, 0], rot = [0, 0, 0], shadow = true) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(pos[0], pos[1], pos[2]);
+  m.rotation.set(rot[0], rot[1], rot[2]);
+  m.castShadow = shadow; m.receiveShadow = true;
+  parent.add(m);
+  return m;
+}
+function group(parent, pos = [0, 0, 0], rot = [0, 0, 0]) {
+  const g = new THREE.Group();
+  g.position.set(pos[0], pos[1], pos[2]); g.rotation.set(rot[0], rot[1], rot[2]);
+  parent.add(g); return g;
+}
+const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+const rbox = (w, h, d, r = 0.004, s = 2) => new RoundedBoxGeometry(w, h, d, s, Math.min(r, w / 2 - 1e-4, h / 2 - 1e-4, d / 2 - 1e-4));
+const cyl = (rt, rb, h, s = 24, open = false, ts = 0, tl = PI * 2) => new THREE.CylinderGeometry(rt, rb, h, s, 1, open, ts, tl);
+function tube(points, r, mat, parent, seg) {
+  const curve = new THREE.CatmullRomCurve3(points.map(p => V3(p[0], p[1], p[2])), false, 'centripetal');
+  return mesh(new THREE.TubeGeometry(curve, seg ?? Math.max(32, points.length * 16), r, 8, false), mat, parent);
+}
+function canvasTex(w, h, draw, srgb = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  t.userData = { ctx: g, canvas: c };
+  return t;
+}
+let seed = 11;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+function hash2(x, y) { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const s = t => t * t * (3 - 2 * t);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  const u = s(xf), v = s(yf);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y) { let f = 0, a = 0.5, fr = 1; for (let i = 0; i < 4; i++) { f += a * vnoise(x * fr, y * fr); fr *= 2.03; a *= 0.5; } return f / 0.9375; }
+
+const galv = () => M(0xb3bcc0, { m: 0.85, r: 0.38 });
+const darkMetal = () => M(0x3d4246, { m: 0.7, r: 0.45 });
+const blackPl = () => M(0x1d201f, { r: 0.5 });
+const cableM = () => M(0x151716, { r: 0.55 });
+const brass = () => M(0xcaa95a, { m: 0.95, r: 0.28 });
+
+// ================================================================ registry
+const comps = [];
+const explodeItems = [];
+const hotLayer = document.getElementById('hot');
+const GROUP_NAME = { Struktur: 'Struktur', Energi: 'Energi', Edge: 'Elektronika & radio', Sensing: 'Sensor', Lingkungan: 'Lingkungan', Uji: 'Rangkaian uji' };
+const GROUP_ORDER = ['Struktur', 'Energi', 'Edge', 'Sensing', 'Lingkungan', 'Uji'];
+function reg(obj, info) {
+  info.obj = obj; info.meshes = []; info.anchor = info.anchor || [0, 0, 0];
+  obj.traverse(o => {
+    if (o.isMesh && o.userData.compId === undefined) {
+      o.userData.compId = info.id; info.meshes.push(o);
+      const m = o.material; if (m.emissive) { m.userData.e0 = m.emissive.clone(); m.userData.ei0 = m.emissiveIntensity; }
+    }
+  });
+  const b = document.createElement('button');
+  b.className = 'hs'; b.style.setProperty('--gc', `var(--g-${info.group})`);
+  b.innerHTML = `<i>${info.num}</i><span>${info.short}</span>`;
+  b.addEventListener('pointerenter', () => { state.hoverUI = info.id; });
+  b.addEventListener('pointerleave', () => { if (state.hoverUI === info.id) state.hoverUI = null; });
+  b.addEventListener('click', e => { e.stopPropagation(); select(info.id); });
+  hotLayer.appendChild(b);
+  info.hs = b; info.occ = false;
+  comps.push(info);
+  return obj;
+}
+function addExplode(obj, off) { explodeItems.push({ obj, base: obj.position.clone(), off: V3(off[0], off[1], off[2]) }); }
+
+// ================================================================ FIELD: environment
+const field = new THREE.Group(); scene.add(field);
+const DX = 2.1, DZ = 1.6, DEPTH = 1.9;
+const bgField = canvasTex(16, 512, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#9fb6c6'); gr.addColorStop(0.45, '#d5ded9'); gr.addColorStop(0.62, '#e6e6dc'); gr.addColorStop(1, '#cfd3c6');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+const FOG_FIELD = new THREE.Color(0xdfe2d9);
+
+// horizon tree-line rings
+function treeline(color, hgt, seedOff) {
+  return canvasTex(2048, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = color;
+    g.beginPath(); g.moveTo(0, h);
+    for (let x = 0; x <= w; x += 4) {
+      const n = fbm(x / 60 + seedOff, seedOff) * 0.6 + fbm(x / 13 + seedOff * 2, 1) * 0.4;
+      const spike = hash2(x >> 3, seedOff) > 0.93 ? 0.18 : 0;
+      g.lineTo(x, h - (0.25 + n * hgt + spike) * h);
+    }
+    g.lineTo(w, h); g.closePath(); g.fill();
+  });
+}
+{
+  const far = treeline('#8e9c8f', 0.55, 3);
+  const near = treeline('#62735f', 0.5, 9);
+  for (const [tex, r, hh, y] of [[far, 70, 16, -2.6], [near, 42, 11, -2.4]]) {
+    tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(3, 1);
+    const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.BackSide, depthWrite: false, fog: true });
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(r, r, hh, 96, 1, true), m);
+    ring.position.y = y + hh / 2; ring.userData.noGhost = true; ring.userData.bg = true;
+    field.add(ring);
+  }
+  const floor = mesh(new THREE.CircleGeometry(80, 64), M(0x8d9478, { r: 1, env: 0.3 }), field, [0, -2.0, 0], [-PI / 2, 0, 0], false);
+  floor.userData.noGhost = true; floor.userData.bg = true;
+}
+// plinth + plaque
+{
+  const pl = mesh(rbox(4.36, 0.1, 3.36, 0.02), M(0x2c2a26, { r: 0.55 }), field, [0, -DEPTH - 0.05, 0]);
+  pl.userData.noGhost = true;
+  const plaque = canvasTex(1024, 64, (g, w, h) => {
+    g.fillStyle = '#2c2a26'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e9e4d6'; g.font = '600 30px Inter, sans-serif';
+    g.fillText('PEATGUARD  ·  penampang lahan gambut (ilustrasi), Pulang Pisau, Kalimantan Tengah  ·  skala 1:1', 20, 42);
+  });
+  const p = mesh(new THREE.PlaneGeometry(3.0, 0.06), M(0xffffff, { map: plaque, r: 0.6 }), field, [-0.5, -DEPTH - 0.05, DZ + 0.081], [0, 0, 0], false);
+  p.userData.noGhost = true;
+}
+
+// ---- terrain height
+const FLAT = [[0, 0.75, 0.45], [1.35, 0.95, 0.24], [0.8, 1.6, 0.25], [-0.62, 1.55, 0.2]];
+const PUD = { x: -1.15, z: 0.15, rx: 0.52, rz: 0.34 };
+function terrainH(x, z) {
+  let h = (fbm(x * 1.5 + 3.1, z * 1.5 + 7.7) - 0.5) * 0.11;
+  const e = Math.min(DX - Math.abs(x), DZ - Math.abs(z));
+  h *= SS(e, 0.0, 0.14);
+  for (const [fx, fz, r] of FLAT) h *= SS(Math.hypot(x - fx, z - fz), r * 0.55, r);
+  const pd = Math.hypot((x - PUD.x) / PUD.rx, (z - PUD.z) / PUD.rz);
+  if (pd < 1.3) h -= 0.075 * (1 - SS(pd, 0.5, 1.3));
+  return h;
+}
+// ---- top surface texture (leaf litter, moss, twigs)
+const groundTex = canvasTex(2048, 1560, (g, w, h) => {
+  g.fillStyle = '#4a3a23'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 26000; i++) { const a = 0.05 + rnd() * 0.1; g.fillStyle = rnd() > 0.5 ? `rgba(20,12,4,${a})` : `rgba(140,110,70,${a})`; g.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 5, 2 + rnd() * 4); }
+  for (let i = 0; i < 46; i++) {
+    const x = rnd() * w, y = rnd() * h, r = 60 + rnd() * 180;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(88,112,44,0.75)'); gr.addColorStop(1, 'rgba(88,112,44,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+  }
+  const leaf = ['#6e4a25', '#8b5d2a', '#5b4621', '#7c6a34', '#a06c32', '#3f301b', '#6b5a2c'];
+  for (let i = 0; i < 9000; i++) {
+    g.save(); g.translate(rnd() * w, rnd() * h); g.rotate(rnd() * PI);
+    g.fillStyle = leaf[(rnd() * leaf.length) | 0]; g.globalAlpha = 0.65 + rnd() * 0.35;
+    const L = 8 + rnd() * 22; g.beginPath(); g.ellipse(0, 0, L, L * (0.28 + rnd() * 0.18), 0, 0, PI * 2); g.fill();
+    g.strokeStyle = 'rgba(30,20,8,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(-L, 0); g.lineTo(L, 0); g.stroke();
+    g.restore();
+  }
+  g.globalAlpha = 1;
+  for (let i = 0; i < 380; i++) {
+    g.strokeStyle = `rgba(${90 + rnd() * 40},${70 + rnd() * 30},${40 + rnd() * 20},.85)`; g.lineWidth = 1.5 + rnd() * 3;
+    let x = rnd() * w, y = rnd() * h; g.beginPath(); g.moveTo(x, y);
+    const a = rnd() * PI * 2, L = 30 + rnd() * 120; g.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
+  }
+  // wet dark halo around the puddle
+  const px = (PUD.x + DX) / (2 * DX) * w, py = (PUD.z + DZ) / (2 * DZ) * h;
+  const gr = g.createRadialGradient(px, py, 0, px, py, 330);
+  gr.addColorStop(0, 'rgba(15,10,5,.75)'); gr.addColorStop(1, 'rgba(15,10,5,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+const soil = group(field);
+{
+  const geo = new THREE.PlaneGeometry(2 * DX, 2 * DZ, 168, 128);
+  geo.rotateX(-PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, terrainH(pos.getX(i), pos.getZ(i)));
+  geo.computeVertexNormals();
+  const top = mesh(geo, M(0xffffff, { map: groundTex, r: 0.92, env: 0.5 }), soil, [0, 0, 0], [0, 0, 0], false);
+  top.receiveShadow = true;
+  // blackwater puddle
+  const s = new THREE.Shape();
+  for (let i = 0; i <= 48; i++) {
+    const a = i / 48 * PI * 2, k = 0.82 + (vnoise(Math.cos(a) * 2 + 5, Math.sin(a) * 2 + 5) - 0.5) * 0.35;
+    const x = Math.cos(a) * PUD.rx * k, y = Math.sin(a) * PUD.rz * k;
+    if (i === 0) s.moveTo(x, y); else s.lineTo(x, y);
+  }
+  const w = mesh(new THREE.ShapeGeometry(s), M(0x1c140c, { r: 0.04, t: true, o: 0.92, env: 1.6 }), soil, [PUD.x, -0.016, PUD.z], [-PI / 2, 0, 0], false);
+  w.userData.pass = true;
+}
+
+// ---- soil cross-section faces
+function drawSoil(g, w, h, sd) {
+  const ppm = h / DEPTH;
+  const L = [[0, '#4a3820'], [0.06, '#7a5230'], [0.38, '#5f4025'], [0.95, '#47311d']];
+  L.forEach(([d, c], i) => {
+    g.fillStyle = c; g.beginPath(); g.moveTo(0, h);
+    for (let x = 0; x <= w; x += 6) g.lineTo(x, d === 0 ? 0 : (d + (vnoise(x / 80 + sd * 3, i * 7) - 0.5) * 0.06) * ppm);
+    g.lineTo(w, h); g.closePath(); g.fill();
+  });
+  for (let i = 0; i < w * h / 45; i++) { const a = 0.04 + rnd() * 0.08; g.fillStyle = rnd() > 0.5 ? `rgba(255,220,170,${a})` : `rgba(0,0,0,${a + 0.03})`; g.fillRect(rnd() * w, rnd() * h, 1 + rnd() * 3, 1 + rnd() * 2); }
+  // fibres (fibric) and fewer in hemic
+  for (let i = 0; i < w * 1.4; i++) {
+    const d = rnd() < 0.75 ? 0.06 + rnd() * 0.32 : 0.38 + rnd() * 0.5;
+    const x = rnd() * w, y = d * ppm, a = (rnd() - 0.5) * 0.9, L2 = 5 + rnd() * 16;
+    g.strokeStyle = `rgba(${150 + rnd() * 40},${105 + rnd() * 30},${60 + rnd() * 20},${d < 0.38 ? 0.6 : 0.3})`; g.lineWidth = 0.8 + rnd();
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * L2, y + Math.sin(a) * L2); g.stroke();
+  }
+  // roots
+  for (let i = 0; i < w / 45; i++) {
+    let x = rnd() * w, y = 0; const end = (0.1 + rnd() * 0.5) * ppm;
+    g.strokeStyle = `rgba(${170 + rnd() * 30},${130 + rnd() * 30},${85 + rnd() * 20},.5)`; g.lineWidth = 1 + rnd() * 2.2;
+    g.beginPath(); g.moveTo(x, y);
+    while (y < end) { x += (rnd() - 0.5) * 10; y += 4 + rnd() * 6; g.lineTo(x, y); }
+    g.stroke();
+  }
+  // wood fragments
+  for (let i = 0; i < w / 40; i++) {
+    const d = 0.3 + rnd() * 1.4;
+    g.save(); g.translate(rnd() * w, d * ppm); g.rotate((rnd() - 0.5) * 0.6);
+    g.fillStyle = ['#5e3b1e', '#73502d', '#3e2a16'][(rnd() * 3) | 0];
+    g.beginPath(); g.ellipse(0, 0, 6 + rnd() * 26, 3 + rnd() * 7, 0, 0, PI * 2); g.fill(); g.restore();
+  }
+  // moss lip
+  const gm = g.createLinearGradient(0, 0, 0, 0.03 * ppm);
+  gm.addColorStop(0, 'rgba(92,116,46,1)'); gm.addColorStop(1, 'rgba(92,116,46,0)');
+  g.fillStyle = gm; g.fillRect(0, 0, w, 0.03 * ppm);
+  // saturated zone (below the water table)
+  g.fillStyle = 'rgba(18,40,56,0.13)'; g.fillRect(0, 0.45 * ppm, w, h);
+  for (let i = 0; i < w / 6; i++) { g.fillStyle = 'rgba(190,215,235,.07)'; g.fillRect(rnd() * w, (0.47 + rnd() * 1.4) * ppm, 6 + rnd() * 20, 1); }
+}
+function soilFaceMat(len, sd) {
+  const t = canvasTex(Math.round(len * 300), Math.round(DEPTH * 300), (g, w, h) => drawSoil(g, w, h, sd));
+  return M(0xffffff, { map: t, r: 0.95, env: 0.35 });
+}
+const WELL = { x: 0.8, z: DZ, r: 0.031 };
+{
+  // front face with a notch where the dip well is cut open
+  const s = new THREE.Shape();
+  s.moveTo(-DX, -DEPTH); s.lineTo(DX, -DEPTH); s.lineTo(DX, 0);
+  s.lineTo(WELL.x + WELL.r, 0); s.lineTo(WELL.x + WELL.r, -1.6); s.lineTo(WELL.x - WELL.r, -1.6); s.lineTo(WELL.x - WELL.r, 0);
+  s.lineTo(-DX, 0); s.lineTo(-DX, -DEPTH);
+  const fg = new THREE.ShapeGeometry(s);
+  const p = fg.attributes.position, uv = fg.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + DX) / (2 * DX), (p.getY(i) + DEPTH) / DEPTH);
+  mesh(fg, soilFaceMat(2 * DX, 1), soil, [0, 0, DZ], [0, 0, 0], false);
+  mesh(new THREE.PlaneGeometry(2 * DZ, DEPTH), soilFaceMat(2 * DZ, 2), soil, [DX, -DEPTH / 2, 0], [0, PI / 2, 0], false);
+  mesh(new THREE.PlaneGeometry(2 * DZ, DEPTH), soilFaceMat(2 * DZ, 3), soil, [-DX, -DEPTH / 2, 0], [0, -PI / 2, 0], false);
+  mesh(new THREE.PlaneGeometry(2 * DX, DEPTH), soilFaceMat(2 * DX, 4), soil, [0, -DEPTH / 2, -DZ], [0, PI, 0], false);
+  // interior behind the well notch (dark, so the notch never shows through)
+  mesh(new THREE.PlaneGeometry(0.07, 1.6), M(0x24180d, { r: 1 }), soil, [WELL.x, -0.8, DZ - 0.04], [0, 0, 0], false);
+}
+reg(soil, { id: 'soil', num: 21, scene: 'field', group: 'Lingkungan', short: 'Penampang gambut', anchor: [-1.5, -1.25, DZ + 0.01],
+  name: 'Penampang lahan gambut', part: 'Potongan tanah gambut sedalam 1,9 m dengan permukaan serasah daun, lumut, dan genangan air hitam',
+  spec: 'Lapisan dibuat ilustratif: atas lebih berserat (fibrik), tengah setengah terurai (hemik), bawah terurai (saprik). Area di bawah muka air tanah diberi warna lebih gelap dan basah.',
+  role: 'Memberi konteks di mana sensor tanah, sumur pantau, dan transduser GWL dipasang.',
+  note: 'Ketebalan lapisan bukan data lapangan. Ganti dengan profil hasil survei jika ada.' });
+
+// ---- groundwater overlays on the visible faces + depth ruler
+const gwl = group(field);
+{
+  const GWL = -0.45;
+  const sheen = () => M(0x25455c, { t: true, o: 0.18, r: 0.12, env: 1.4, dw: false });
+  const fW = mesh(new THREE.PlaneGeometry(2 * DX, DEPTH + GWL), sheen(), gwl, [0, (GWL - DEPTH) / 2, DZ + 0.002], [0, 0, 0], false);
+  const sW = mesh(new THREE.PlaneGeometry(2 * DZ, DEPTH + GWL), sheen(), gwl, [DX + 0.002, (GWL - DEPTH) / 2, 0], [0, PI / 2, 0], false);
+  fW.userData.pass = sW.userData.pass = true;
+  const blue = () => M(0x4aa8ff, { e: 0x1d6bc4, ei: 0.9 });
+  mesh(box(2 * DX, 0.008, 0.003), blue(), gwl, [0, GWL, DZ + 0.004], [0, 0, 0], false);
+  mesh(box(0.003, 0.008, 2 * DZ), blue(), gwl, [DX + 0.004, GWL, 0], [0, 0, 0], false);
+  const red = M(0xff4a3d, { e: 0xb3241a, ei: 0.9 });
+  for (let x = -DX + 0.02; x < DX - 0.04; x += 0.09) mesh(box(0.05, 0.007, 0.003), red, gwl, [x + 0.025, -0.40, DZ + 0.005], [0, 0, 0], false);
+  for (let z = -DZ + 0.02; z < DZ - 0.04; z += 0.09) mesh(box(0.003, 0.007, 0.05), red, gwl, [DX + 0.005, -0.40, z + 0.025], [0, 0, 0], false);
+}
+reg(gwl, { id: 'gwl', num: 20, scene: 'field', group: 'Lingkungan', short: 'Muka air tanah', anchor: [1.75, -0.43, DZ + 0.01],
+  name: 'Muka air tanah (GWL) dan batas 0,4 m', part: 'Garis biru: muka air tanah, contoh −0,45 m. Garis merah putus-putus: batas kerusakan 0,4 m (PP 57/2016).',
+  spec: 'Area di bawah garis biru adalah zona jenuh air. Air di dalam sumur pantau berada pada level yang sama.',
+  role: 'Jika GWL lebih dalam dari 0,4 m, node menaikkan kelas risiko minimal ke Moderate (langkah 4 Algoritma 1), apa pun keluaran model.',
+  note: 'Kedalaman −0,45 m hanya contoh, dipilih agar aturan batas bawah terlihat aktif.' });
+{
+  const rt = canvasTex(160, 570, (g, w, h) => {
+    const ppm = h / DEPTH;
+    g.fillStyle = 'rgba(250,248,240,.93)'; g.fillRect(0, 0, 46, h);
+    g.fillStyle = '#1c1f1d';
+    for (let d = 0; d <= 1.9001; d += 0.1) { const y = Math.min(d * ppm, h - 1); g.fillRect(0, y, (Math.round(d * 10) % 5 === 0) ? 30 : 16, 2); }
+    g.font = '600 22px Inter, sans-serif';
+    [[0, '0'], [0.5, '0,5 m'], [1.0, '1,0 m'], [1.5, '1,5 m']].forEach(([d, t]) => { g.fillStyle = 'rgba(250,248,240,.93)'; g.fillRect(48, d * ppm - 2, g.measureText(t).width + 10, 26); g.fillStyle = '#1c1f1d'; g.fillText(t, 52, d * ppm + 19); });
+    g.fillStyle = '#d0302a'; g.fillRect(0, 0.4 * ppm - 1, 46, 4);
+    g.fillStyle = 'rgba(250,248,240,.93)'; g.fillRect(48, 0.4 * ppm - 2, 76, 26); g.fillStyle = '#d0302a'; g.fillText('0,4 m', 52, 0.4 * ppm + 19);
+  });
+  const r = mesh(new THREE.PlaneGeometry(0.16, DEPTH), M(0xffffff, { map: rt, t: true, r: 0.7 }), field, [-DX + 0.1, -DEPTH / 2, DZ + 0.006], [0, 0, 0], false);
+  r.userData.pass = true;
+}
+
+// ---- vegetation (alpha cards)
+const grassTex = canvasTex(256, 256, (g, w, h) => {
+  g.clearRect(0, 0, w, h);
+  for (let i = 0; i < 46; i++) {
+    const x0 = w / 2 + (rnd() - 0.5) * 60, lean = (rnd() - 0.5) * 220, top = 20 + rnd() * 120;
+    const gr = g.createLinearGradient(0, h, 0, top);
+    gr.addColorStop(0, '#2f4419'); gr.addColorStop(0.6, ['#5f7e2c', '#6f8f35', '#86973f', '#8f8a45'][(rnd() * 4) | 0]); gr.addColorStop(1, '#b0a35e');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(x0 - 3, h); g.quadraticCurveTo(x0 + lean * 0.3, (h + top) / 2, x0 + lean * 0.55, top); g.quadraticCurveTo(x0 + lean * 0.3 + 2, (h + top) / 2, x0 + 3, h); g.fill();
+  }
+});
+const fernTex = canvasTex(128, 256, (g, w, h) => {
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = '#3e5a1f'; g.lineWidth = 3; g.beginPath(); g.moveTo(w / 2, h); g.quadraticCurveTo(w / 2 + 6, h / 2, w / 2, 6); g.stroke();
+  for (let y = h - 14; y > 10; y -= 9) {
+    const t = 1 - y / h, L = 52 * Math.sin(PI * Math.min(1, (1 - t) * 1.05)) + 4;
+    g.fillStyle = ['#4f7a26', '#5c8a2c', '#46701f'][(y / 9 | 0) % 3];
+    for (const s of [-1, 1]) { g.beginPath(); g.moveTo(w / 2, y); g.quadraticCurveTo(w / 2 + s * L * 0.6, y - 10, w / 2 + s * L, y - 4); g.quadraticCurveTo(w / 2 + s * L * 0.6, y + 2, w / 2, y + 4); g.fill(); }
+  }
+});
+const leafTex = canvasTex(128, 128, (g, w, h) => {
+  g.clearRect(0, 0, w, h);
+  for (let i = 0; i < 9; i++) {
+    g.save(); g.translate(w / 2 + (rnd() - 0.5) * 70, h / 2 + (rnd() - 0.5) * 70); g.rotate(rnd() * PI * 2);
+    g.fillStyle = ['#355c22', '#41702a', '#2b4c1c', '#4d7a30'][(rnd() * 4) | 0];
+    g.beginPath(); g.ellipse(0, 0, 26, 9, 0, 0, PI * 2); g.fill(); g.restore();
+  }
+});
+const veg = group(field);
+function exclusion(x, z) {
+  if (Math.hypot(x - 0, z - 0.75) < 0.42) return true;
+  if (Math.hypot(x - 1.35, z - 0.95) < 0.25) return true;
+  if (Math.hypot(x - 0.8, z - 1.6) < 0.18) return true;
+  if (Math.hypot((x - PUD.x) / PUD.rx, (z - PUD.z) / PUD.rz) < 0.95) return true;
+  if (x > -1.65 && x < -0.2 && Math.abs(z + 1.12) < 0.13) return true; // log
+  if (Math.hypot(x - 1.55, z + 0.45) < 0.25) return true; // stump
+  return false;
+}
+{
+  const mat = M(0xffffff, { map: grassTex, at: 0.45, side: THREE.DoubleSide, r: 0.85, env: 0.4 });
+  const pts = [];
+  while (pts.length < 210) {
+    const x = (rnd() * 2 - 1) * (DX - 0.03), z = (rnd() * 2 - 1) * (DZ - 0.03);
+    if (exclusion(x, z)) continue;
+    const edge = Math.min(DX - Math.abs(x), DZ - Math.abs(z));
+    if (edge > 0.35 && rnd() < 0.55) continue;
+    pts.push([x, z, 0.12 + rnd() * 0.26, rnd() * PI]);
+  }
+  for (let k = 0; k < 3; k++) {
+    const geo = new THREE.PlaneGeometry(1, 1); geo.translate(0, 0.5, 0); geo.rotateY(k * PI / 3);
+    const im = new THREE.InstancedMesh(geo, mat, pts.length);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+    pts.forEach(([x, z, s, r], i) => { q.setFromEuler(e.set(0, r, 0)); m4.compose(V3(x, terrainH(x, z) - 0.01, z), q, V3(s * 0.9, s, s * 0.9)); im.setMatrixAt(i, m4); });
+    im.userData.veg = true; im.castShadow = false; im.receiveShadow = true;
+    veg.add(im);
+  }
+  // ferns
+  const fmat = M(0xffffff, { map: fernTex, at: 0.45, side: THREE.DoubleSide, r: 0.8, env: 0.4 });
+  const fgeo = new THREE.PlaneGeometry(0.16, 0.5); fgeo.translate(0, 0.25, 0);
+  const centers = [];
+  while (centers.length < 15) { const x = (rnd() * 2 - 1) * 1.9, z = (rnd() * 2 - 1) * 1.4; if (!exclusion(x, z) && Math.hypot(x, z - 0.75) > 0.7) centers.push([x, z]); }
+  const F = 8, fim = new THREE.InstancedMesh(fgeo, fmat, centers.length * F);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  centers.forEach(([x, z], i) => { const sc = 0.7 + rnd() * 0.6; for (let k = 0; k < F; k++) { q.setFromEuler(e.set(0.9 + rnd() * 0.3, k * PI * 2 / F + rnd() * 0.3, 0, 'YXZ')); m4.compose(V3(x, terrainH(x, z), z), q, V3(sc, sc, sc)); fim.setMatrixAt(i * F + k, m4); } });
+  fim.userData.veg = true; fim.castShadow = false;
+  veg.add(fim);
+  // two saplings at the back corners
+  const lmat = M(0xffffff, { map: leafTex, at: 0.45, side: THREE.DoubleSide, r: 0.8, env: 0.4 });
+  const lgeo = new THREE.PlaneGeometry(0.34, 0.34);
+  const trees = [[1.75, -1.2, 1.9]];
+  const lim = new THREE.InstancedMesh(lgeo, lmat, trees.length * 60);
+  let li = 0;
+  for (const [x, z, h] of trees) {
+    mesh(cyl(0.022, 0.04, h, 10), M(0x6d5a45, { r: 0.9 }), veg, [x, h / 2, z], [0.04, 0, -0.03]);
+    for (let k = 0; k < 60; k++) {
+      const a = rnd() * PI * 2, r = rnd() * 0.45, yy = h * 0.62 + rnd() * h * 0.45;
+      q.setFromEuler(e.set(rnd() * PI, rnd() * PI, rnd() * PI));
+      m4.compose(V3(x + Math.cos(a) * r, yy, z + Math.sin(a) * r), q, V3(1, 1, 1)); lim.setMatrixAt(li++, m4);
+    }
+  }
+  lim.userData.veg = true; lim.castShadow = false;
+  veg.add(lim);
+  // fallen log + burnt stump
+  const logM = M(0x5a4b3b, { r: 0.95 });
+  mesh(cyl(0.075, 0.085, 1.4, 14), logM, veg, [-0.92, terrainH(-0.92, -1.12) + 0.06, -1.12], [0.05, 0.12, PI / 2]);
+  mesh(cyl(0.07, 0.07, 0.01, 14), M(0x8a6d4a, { r: 0.9 }), veg, [-0.21, 0.065, -1.2], [0, 0, PI / 2]);
+  const sg = cyl(0.13, 0.17, 0.5, 14, false);
+  const sp = sg.attributes.position;
+  for (let i = 0; i < sp.count; i++) if (sp.getY(i) > 0.2) sp.setY(i, sp.getY(i) + (hash2(i, 3) - 0.5) * 0.22);
+  sg.computeVertexNormals();
+  mesh(sg, M(0x1f1b17, { r: 1 }), veg, [1.55, 0.2, -0.45]);
+  for (let i = 0; i < 9; i++) mesh(box(0.05 + rnd() * 0.06, 0.02, 0.03 + rnd() * 0.04), M(0x161412, { r: 1 }), veg, [1.55 + (rnd() - 0.5) * 0.6, 0.01, -0.45 + (rnd() - 0.5) * 0.6], [0, rnd() * 3, 0]);
+}
+
+// ================================================================ FIELD: the node
+const P = { x: 0, z: 0.75 };
+const ELEC = new THREE.Group();
+
+// ---- pole, footing, crossarm
+const poleG = group(field);
+{
+  const wood = M(0x7d5d3c, { r: 0.85 });
+  mesh(rbox(0.55, 0.05, 0.55, 0.01), wood, poleG, [P.x, 0.025, P.z]);
+  for (const dz of [-0.18, 0, 0.18]) mesh(box(0.55, 0.004, 0.006), M(0x5e4429, { r: 0.9 }), poleG, [P.x, 0.051, P.z + dz]);
+  mesh(rbox(0.22, 0.012, 0.22, 0.003), galv(), poleG, [P.x, 0.057, P.z]);
+  for (const [dx, dz] of [[-0.08, -0.08], [0.08, -0.08], [-0.08, 0.08], [0.08, 0.08]]) mesh(cyl(0.008, 0.008, 0.012, 6), galv(), poleG, [P.x + dx, 0.068, P.z + dz]);
+  for (let i = 0; i < 4; i++) { const a = i * PI / 2; mesh(box(0.004, 0.08, 0.06), galv(), poleG, [P.x + Math.cos(a) * 0.055, 0.1, P.z + Math.sin(a) * 0.055], [0, -a, 0]); }
+  mesh(cyl(0.03, 0.03, 2.27, 28), galv(), poleG, [P.x, 0.063 + 2.27 / 2, P.z]);
+  mesh(cyl(0.033, 0.033, 0.02, 28), darkMetal(), poleG, [P.x, 2.34, P.z]);
+  // crossarm with cross-over clamp
+  mesh(cyl(0.02, 0.02, 1.2, 20), galv(), poleG, [P.x, 2.08, P.z], [0, 0, PI / 2]);
+  mesh(rbox(0.075, 0.1, 0.075, 0.006), galv(), poleG, [P.x, 2.08, P.z]);
+  for (const [y, z] of [[2.05, 0.04], [2.11, 0.04], [2.05, -0.04], [2.11, -0.04]]) mesh(cyl(0.007, 0.007, 0.012, 6), darkMetal(), poleG, [P.x + 0.04, y, P.z + z], [0, 0, PI / 2]);
+  for (const x of [-0.6, 0.6]) mesh(cyl(0.022, 0.022, 0.012, 20), blackPl(), poleG, [x, 2.08, P.z], [0, 0, PI / 2]);
+  // cable ties
+  for (const y of [0.35, 0.65, 0.95, 1.6, 1.9, 2.22]) mesh(new THREE.TorusGeometry(0.037, 0.0028, 6, 28), blackPl(), poleG, [P.x, y, P.z], [PI / 2, 0, 0]);
+}
+reg(poleG, { id: 'pole', num: 1, scene: 'field', group: 'Struktur', short: 'Tiang & dudukan', anchor: [0.035, 0.75, P.z + 0.03],
+  name: 'Tiang, lengan silang, dan dudukan', part: 'Pipa galvanis 2 in setinggi ±2,3 m pada pelat flens dan papan kayu, lengan silang 1,2 m dengan klem',
+  spec: 'Panel dan antena berada di ketinggian ±2–2,6 m, sesuai asumsi anggaran tautan (antena node 2 dBi pada tiang 2 m).',
+  role: 'Menyangga semua perangkat. Papan kayu menyebar beban di atas gambut yang lunak.',
+  note: 'Pondasi hanya ilustrasi. Di lapangan, tiang biasanya dipancang sampai lapisan mineral atau diberi tali penahan, sesuai hasil survei.' });
+
+// ---- solar panel
+const solar = group(field, [P.x, 2.47, P.z], [0.22, 0, 0]);
+const solarTex = canvasTex(1024, 740, (g, w, h) => {
+  g.fillStyle = '#c9d0d4'; g.fillRect(0, 0, w, h);
+  const cols = 6, rows = 4, pad = 16, gap = 6;
+  const cw = (w - 2 * pad - (cols - 1) * gap) / cols, ch = (h - 2 * pad - (rows - 1) * gap) / rows;
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+    const x = pad + i * (cw + gap), y = pad + j * (ch + gap);
+    const gr = g.createLinearGradient(x, y, x + cw, y + ch); gr.addColorStop(0, '#162a55'); gr.addColorStop(1, '#0b1735');
+    g.fillStyle = gr; g.fillRect(x, y, cw, ch);
+    g.fillStyle = 'rgba(200,210,225,.18)'; for (let k = 1; k < 40; k++) g.fillRect(x, y + k * ch / 40, cw, 1);
+    g.fillStyle = 'rgba(225,230,238,.85)'; for (const f of [0.25, 0.5, 0.75]) g.fillRect(x + cw * f - 1.5, y, 3, ch);
+  }
+});
+{
+  const fr = M(0xc2c8cc, { m: 0.85, r: 0.3 });
+  const W = 0.36, Dp = 0.26, T = 0.025;
+  mesh(box(W, T, 0.012), fr, solar, [0, 0, Dp / 2 - 0.006]);
+  mesh(box(W, T, 0.012), fr, solar, [0, 0, -Dp / 2 + 0.006]);
+  mesh(box(0.012, T, Dp), fr, solar, [W / 2 - 0.006, 0, 0]);
+  mesh(box(0.012, T, Dp), fr, solar, [-W / 2 + 0.006, 0, 0]);
+  mesh(box(W - 0.02, 0.003, Dp - 0.02), M(0xf2f2f0, { r: 0.7 }), solar, [0, -0.006, 0]);
+  mesh(new THREE.PlaneGeometry(W - 0.022, Dp - 0.022), M(0xffffff, { map: solarTex, r: 0.12, m: 0.25, env: 1.3 }), solar, [0, 0.009, 0], [-PI / 2, 0, 0]);
+  mesh(rbox(0.07, 0.02, 0.05, 0.004), blackPl(), solar, [0, -0.018, -0.07]);
+  mesh(box(0.05, 0.006, 0.22), galv(), solar, [0, -0.016, 0]);
+  mesh(box(0.03, 0.12, 0.03), galv(), field, [P.x, 2.4, P.z]);
+}
+reg(solar, { id: 'solar', num: 2, scene: 'field', group: 'Energi', short: 'Panel surya 6 W', anchor: [0.19, 0.02, 0.1],
+  name: 'Panel surya 6 W', part: 'Panel monokristal 6 W berbingkai aluminium, kotak sambungan di belakang, kemiringan kecil',
+  spec: 'Simulasi neraca energi harian 2015–2024 (iradiasi POWER, efisiensi PV 60%, rugi kanopi/kabut asap/kotoran 50%) tidak menunjukkan pemadaman.',
+  role: 'Mengisi sel LiFePO₄ melalui CN3158. Menurut naskah, panel 0,03 W pun sudah cukup, jadi 6 W memberi margin yang lebar.' });
+
+// ---- antenna
+const ant = group(field, [0.56, 2.08, P.z]);
+{
+  mesh(rbox(0.05, 0.05, 0.05, 0.004), galv(), ant, [0, 0, 0]);
+  mesh(box(0.05, 0.004, 0.06), galv(), ant, [0, 0.03, 0]);
+  mesh(cyl(0.011, 0.011, 0.03, 16), brass(), ant, [0, 0.05, 0]);
+  mesh(cyl(0.01, 0.0125, 0.56, 20), M(0xf4f3ee, { r: 0.35, env: 0.8 }), ant, [0, 0.345, 0]);
+  mesh(new THREE.SphereGeometry(0.01, 16, 8, 0, PI * 2, 0, PI / 2), M(0xf4f3ee, { r: 0.35 }), ant, [0, 0.625, 0]);
+}
+reg(ant, { id: 'ant', num: 7, scene: 'field', group: 'Edge', short: 'Antena LoRa', anchor: [0, 0.66, 0],
+  name: 'Antena LoRa 923 MHz', part: 'Antena omni fiberglass 2 dBi, konektor N, koaksial ke SMA bulkhead di atas box',
+  spec: 'Pita Indonesia 920–923 MHz, rencana kanal AS923-2. Jangkauan perencanaan 3,8 km pada SF12 (n = 3,22), satu gateway per 37,4 km².',
+  role: 'Memancarkan ALERT dan HEARTBEAT ke gateway LoRaWAN surya. Waktu tayang SF12 hanya 0,002% per hari.' });
+
+// ---- anemometer
+const anemo = group(field, [-0.56, 2.08, P.z]);
+let rotor;
+{
+  mesh(rbox(0.05, 0.05, 0.05, 0.004), galv(), anemo);
+  mesh(cyl(0.012, 0.012, 0.16, 16), galv(), anemo, [0, 0.105, 0]);
+  const wht = () => M(0xeceee9, { r: 0.4 });
+  mesh(cyl(0.026, 0.03, 0.08, 28), wht(), anemo, [0, 0.22, 0]);
+  mesh(cyl(0.012, 0.026, 0.02, 28), wht(), anemo, [0, 0.27, 0]);
+  rotor = group(anemo, [0, 0.29, 0]);
+  mesh(cyl(0.014, 0.014, 0.026, 20), wht(), rotor);
+  for (let i = 0; i < 3; i++) {
+    const arm = group(rotor, [0, 0, 0], [0, i * PI * 2 / 3, 0]);
+    mesh(cyl(0.003, 0.003, 0.09, 8), darkMetal(), arm, [0.05, 0, 0], [0, 0, PI / 2]);
+    mesh(new THREE.SphereGeometry(0.025, 20, 10, 0, PI * 2, 0, PI / 2), M(0x232625, { r: 0.35, side: THREE.DoubleSide }), arm, [0.105, 0, 0], [PI / 2, 0, 0]);
+    mesh(new THREE.TorusGeometry(0.025, 0.0018, 6, 24), M(0x232625, { r: 0.35 }), arm, [0.105, 0, 0]);
+  }
+}
+reg(anemo, { id: 'anemo', num: 15, scene: 'field', group: 'Sensing', short: 'Anemometer', anchor: [0, 0.34, 0],
+  name: 'Anemometer mangkuk', part: 'Anemometer tiga mangkuk dengan keluaran pulsa, di ujung lengan silang',
+  spec: 'Pulsa dibaca lewat GPIO RTC sehingga tetap dihitung saat MCU tidur.',
+  role: 'Memberi U_max, yaitu kecepatan angin maksimum harian, salah satu dari 12 fitur model.' });
+
+// ---- SHT31 radiation shield
+const shield = group(field, [0.34, 1.83, P.z]);
+{
+  mesh(cyl(0.009, 0.009, 0.3, 12), galv(), field, [0.17, 1.83, P.z], [0, 0, PI / 2]);
+  mesh(rbox(0.04, 0.06, 0.04, 0.004), galv(), field, [0.03, 1.83, P.z]);
+  const w = () => M(0xf3f3ee, { r: 0.5, side: THREE.DoubleSide });
+  mesh(cyl(0.05, 0.072, 0.012, 36), w(), shield, [0, 0.03, 0]);
+  for (let i = 0; i < 6; i++) mesh(cyl(0.05, 0.068, 0.012, 36, true), w(), shield, [0, 0.012 - i * 0.02, 0]);
+  mesh(cyl(0.005, 0.005, 0.15, 10), darkMetal(), shield, [0, -0.04, 0]);
+  mesh(cyl(0.008, 0.008, 0.035, 16), M(0x3b3f3e, { r: 0.4 }), shield, [0, -0.12, 0]);
+  mesh(cyl(0.0085, 0.0085, 0.012, 16), M(0xe8e8e0, { r: 0.9 }), shield, [0, -0.143, 0]);
+}
+reg(shield, { id: 'sht31', num: 14, scene: 'field', group: 'Sensing', short: 'SHT31 + pelindung', anchor: [0.08, 0.03, 0],
+  name: 'Sensor suhu & kelembapan SHT31', part: 'Sensirion SHT31 dalam kapsul berfilter, dipasang di radiation shield bertumpuk (I2C)',
+  spec: '±2% RH, ±0,2 °C, arus maksimum 1,5 mA.',
+  role: 'Memberi T_max, RH_min, dan VPD_max harian. Pelindung bertumpuk menghalangi matahari langsung dan hujan tanpa menghambat aliran udara.' });
+
+// ---- local siren
+const siren = group(field, [-0.13, 1.83, P.z + 0.045]);
+let sirenMat;
+{
+  mesh(box(0.11, 0.025, 0.006), galv(), siren, [0.06, 0, -0.035]);
+  mesh(rbox(0.04, 0.06, 0.03, 0.004), darkMetal(), siren, [0, 0, -0.02]);
+  mesh(cyl(0.028, 0.028, 0.04, 28), M(0x2b2e2d, { r: 0.45 }), siren, [0, 0, 0.012], [PI / 2, 0, 0]);
+  sirenMat = M(0xd2392a, { r: 0.35, side: THREE.DoubleSide });
+  mesh(cyl(0.055, 0.024, 0.055, 32, true), sirenMat, siren, [0, 0, 0.06], [-PI / 2, 0, 0]);
+  mesh(new THREE.CircleGeometry(0.024, 24), M(0x111111, { r: 0.6 }), siren, [0, 0, 0.033]);
+}
+reg(siren, { id: 'siren', num: 9, scene: 'field', group: 'Edge', short: 'Sirene lokal', anchor: [0, 0.07, 0.06],
+  name: 'Sirene lokal', part: 'Sirene/buzzer 12 V pada braket tiang, digerakkan MOSFET dari GPIO ESP32-S3',
+  spec: 'Berbunyi saat kelas naik ke 2 (High) atau 3 (Extreme).',
+  role: 'Peringatan di lokasi tetap jalan meski tautan LoRa, gateway, atau jaringan seluler putus, karena keputusan dibuat di node.' });
+
+// ---- rain gauge on its own post
+const rain = group(field, [1.35, 0, 0.95]);
+{
+  mesh(rbox(0.26, 0.04, 0.26, 0.008), M(0x7d5d3c, { r: 0.85 }), rain, [0, 0.02, 0]);
+  mesh(rbox(0.1, 0.01, 0.1, 0.002), galv(), rain, [0, 0.045, 0]);
+  mesh(cyl(0.024, 0.024, 0.86, 20), galv(), rain, [0, 0.48, 0]);
+  mesh(rbox(0.2, 0.008, 0.2, 0.002), galv(), rain, [0, 0.915, 0]);
+  for (const [dx, dz] of [[0.07, 0.07], [-0.07, 0.07], [0, -0.08]]) mesh(cyl(0.004, 0.004, 0.03, 6), darkMetal(), rain, [dx, 0.925, dz]);
+  const body = M(0xeff0ec, { r: 0.35, env: 0.8 });
+  mesh(cyl(0.08, 0.082, 0.24, 40), body, rain, [0, 1.06, 0]);
+  mesh(new THREE.TorusGeometry(0.08, 0.004, 8, 48), M(0xbcc2c0, { m: 0.6, r: 0.3 }), rain, [0, 1.18, 0], [PI / 2, 0, 0]);
+  mesh(cyl(0.077, 0.01, 0.07, 40, true), M(0x2b2e2d, { side: THREE.DoubleSide, r: 0.4 }), rain, [0, 1.143, 0]);
+  mesh(new THREE.CircleGeometry(0.03, 24), M(0x6d7375, { m: 0.7, r: 0.5 }), rain, [0, 1.12, 0], [-PI / 2, 0, 0]);
+}
+reg(rain, { id: 'rain', num: 16, scene: 'field', group: 'Sensing', short: 'Penakar hujan', anchor: [0, 1.22, 0],
+  name: 'Penakar hujan tipping bucket', part: 'Penakar hujan jungkit dengan keluaran pulsa, di tiang sendiri dengan pelat perata',
+  spec: 'Setiap jungkitan membangunkan node, selain bangun rutin tiap jam.',
+  role: 'Memberi P, P7, P30 (hujan 1, 7, 30 hari), DSR (hari sejak hujan ≥ 1 mm), dan masukan KBDI.' });
+
+// ---- soil probes, exposed on the cross-section
+const probes = group(field);
+{
+  for (const y of [-0.05, -0.2]) {
+    mesh(box(0.1, 0.022, 0.003), M(0x141414, { r: 0.35 }), probes, [-0.69, y, DZ + 0.0015]);
+    mesh(box(0.004, 0.022, 0.0032), M(0xc9a95a, { m: 0.8, r: 0.35 }), probes, [-0.66, y, DZ + 0.0016]);
+    mesh(rbox(0.035, 0.032, 0.014, 0.004), M(0x0c0c0c, { r: 0.25 }), probes, [-0.625, y, DZ + 0.005]);
+  }
+  tube([[-0.62, -0.2, DZ + 0.012], [-0.618, -0.12, DZ + 0.013], [-0.62, -0.05, DZ + 0.012]], 0.0028, cableM(), probes);
+  tube([[-0.62, -0.05, DZ + 0.012], [-0.62, -0.01, DZ + 0.012], [-0.62, 0.01, DZ - 0.02], [-0.55, 0.014, DZ - 0.15]], 0.003, cableM(), probes);
+}
+reg(probes, { id: 'probes', num: 17, scene: 'field', group: 'Sensing', short: 'Probe tanah 5 & 20 cm', anchor: [-0.6, -0.12, DZ + 0.02],
+  name: 'Probe kelembapan tanah kapasitif', part: 'Dua probe kapasitif berlapis epoksi (potted), ditanam mendatar di kedalaman 5 cm dan 20 cm',
+  spec: 'Asumsi 10 mA × 1,5 s × 24 kali per hari (Tabel IV). Daya dimatikan di antara pembacaan.',
+  role: 'Memberi θ5, θ20, dan Δθ20, yaitu kelembapan permukaan, kelembapan lapisan bawah, dan perubahan hariannya.' });
+
+// ---- dip well (cut open) + transducer
+const well = group(field, [WELL.x, 0, WELL.z]);
+const xdcr = group(well, [0, -1.5, -0.012]);
+{
+  mesh(cyl(0.011, 0.011, 0.075, 20), M(0xc8cdd0, { m: 0.9, r: 0.22 }), xdcr);
+  mesh(cyl(0.011, 0.006, 0.014, 20), M(0x2a2d2e), xdcr, [0, -0.044, 0]);
+  mesh(cyl(0.006, 0.006, 0.012, 12), M(0x2a2d2e), xdcr, [0, 0.043, 0]);
+}
+reg(xdcr, { id: 'xdcr', num: 19, scene: 'field', group: 'Sensing', short: 'Transduser GWL', anchor: [0.03, 0, 0.02],
+  name: 'Transduser tekanan (GWL)', part: 'Sensor level air 0–5 m, IP68, berkabel ventilasi, digantung di dasar sumur pantau',
+  spec: 'Dibaca tiap 6 jam. Daya dari boost 12 V: asumsi 88 mA × 1 s × 4 kali per hari.',
+  role: 'Mengukur kedalaman muka air tanah. GWL hanya dipakai sebagai batas bawah kelas risiko, bukan masukan model.' });
+const perfTex = canvasTex(128, 256, (g, w, h) => {
+  g.fillStyle = '#e8ebe6'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#4b4a40';
+  for (let y = 10; y < h; y += 22) for (let x = 8 + ((y / 22) % 2) * 10; x < w; x += 20) { g.beginPath(); g.ellipse(x, y, 3, 5, 0, 0, 7); g.fill(); }
+});
+perfTex.wrapS = perfTex.wrapT = THREE.RepeatWrapping; perfTex.repeat.set(2, 14);
+{
+  const pvc = () => M(0xeceee9, { r: 0.5 });
+  const R = 0.03;
+  mesh(cyl(R, R, 1.6, 32, true, PI / 2, PI), M(0xffffff, { map: perfTex, r: 0.55, side: THREE.DoubleSide }), well, [0, -0.8, 0]);
+  for (const s of [-1, 1]) mesh(box(0.003, 1.6, 0.004), pvc(), well, [s * (R - 0.0015), -0.8, 0.001]);
+  mesh(cyl(R, R, 0.006, 32, false, PI / 2, PI), pvc(), well, [0, -1.6, 0]);
+  mesh(cyl(R, R, 0.3, 32), pvc(), well, [0, 0.15, 0]);
+  mesh(cyl(R + 0.005, R + 0.005, 0.04, 32), M(0x9aa0a2, { r: 0.45 }), well, [0, 0.31, 0]);
+  mesh(cyl(0.006, 0.006, 0.01, 12), brass(), well, [0, 0.335, 0]);
+  mesh(cyl(0.075, 0.08, 0.05, 32, false, PI / 2, PI), M(0x8f8a80, { r: 0.95 }), well, [0, 0.0, 0]);
+  const wm = M(0x2f7fd0, { t: true, o: 0.5, r: 0.08, env: 1.2, dw: false });
+  const wv = mesh(cyl(R - 0.002, R - 0.002, 1.13, 32, true, PI / 2, PI), wm, well, [0, -1.015, 0], [0, 0, 0], false);
+  const wf = mesh(new THREE.PlaneGeometry(2 * R - 0.004, 1.13), M(0x3d8fe0, { t: true, o: 0.45, r: 0.1, dw: false }), well, [0, -1.015, 0.0008], [0, 0, 0], false);
+  const ws = mesh(new THREE.CircleGeometry(R - 0.002, 24, 0, PI), M(0x5aa6f0, { t: true, o: 0.6, r: 0.05, dw: false }), well, [0, -0.45, 0], [-PI / 2, 0, 0], false);
+  wv.userData.pass = wf.userData.pass = ws.userData.pass = true;
+  tube([[0, -1.455, -0.012], [0.003, -1.0, -0.014], [-0.003, -0.4, -0.012], [0, 0.25, -0.01], [0, 0.29, 0]], 0.0026, cableM(), well);
+}
+reg(well, { id: 'well', num: 18, scene: 'field', group: 'Sensing', short: 'Sumur pantau', anchor: [0.05, 0.34, 0],
+  name: 'Sumur pantau (dip well)', part: 'Pipa PVC 2 in berlubang sedalam ±1,6 m dengan tutup terkunci (ditampilkan terbelah oleh penampang)',
+  spec: 'Air di dalam pipa mengikuti muka air tanah di sekitarnya.',
+  role: 'Melindungi transduser GWL dan memungkinkan pengukuran manual pembanding dengan meteran celup.' });
+
+// ---- enclosure
+const W = 0.2, H = 0.25, D = 0.11;
+const E = group(field, [P.x, 1.32, P.z + 0.03 + D / 2 + 0.01]);
+const PZ = -D / 2 + 0.008;
+function devBoard(parent, pos, rot) {
+  const g = group(parent, pos, rot);
+  const pcb = canvasTex(256, 128, (c, w, h) => {
+    c.fillStyle = '#121a1e'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = 'rgba(120,170,190,.22)'; c.lineWidth = 2;
+    for (let i = 0; i < 26; i++) { c.beginPath(); let x = rnd() * w, y = rnd() * h; c.moveTo(x, y); for (let k = 0; k < 3; k++) { if (rnd() > .5) x += (rnd() - .5) * 90; else y += (rnd() - .5) * 60; c.lineTo(x, y); } c.stroke(); }
+    c.fillStyle = 'rgba(230,200,120,.85)'; for (let i = 0; i < 34; i++) { c.beginPath(); c.arc(rnd() * w, rnd() * h, 2, 0, 7); c.fill(); }
+  });
+  mesh(box(0.051, 0.0016, 0.0254), M(0xffffff, { map: pcb, r: 0.45 }), g);
+  mesh(box(0.018, 0.0026, 0.0176), M(0xcfd4d7, { m: 0.9, r: 0.22 }), g, [-0.011, 0.0021, 0]);
+  mesh(box(0.009, 0.0018, 0.009), M(0xcfd4d7, { m: 0.9, r: 0.22 }), g, [0.006, 0.0017, -0.0075]);
+  mesh(box(0.026, 0.0016, 0.0145), M(0x0a0c0e, { r: 0.12 }), g, [0.011, 0.0046, 0.003]);
+  const oled = canvasTex(256, 128, (c, w, h) => { c.fillStyle = '#04070a'; c.fillRect(0, 0, w, h); c.fillStyle = '#86e8ff'; c.font = 'bold 26px monospace'; c.fillText('PEATGUARD', 14, 40); c.font = '20px monospace'; c.fillText('k=1 Moderate', 14, 74); c.fillText('SF12 921.4', 14, 104); });
+  mesh(new THREE.PlaneGeometry(0.022, 0.011), M(0xffffff, { map: oled, e: 0xffffff, ei: 0, r: 0.1 }), g, [0.011, 0.0055, 0.003], [-PI / 2, 0, 0]);
+  for (const x of [0, 0.022]) mesh(box(0.002, 0.003, 0.012), M(0x222222), g, [x, 0.0024, 0.003]);
+  mesh(box(0.0075, 0.0032, 0.009), M(0xbfc4c8, { m: 0.9, r: 0.3 }), g, [-0.0245, 0.0024, 0]);
+  mesh(cyl(0.0013, 0.0013, 0.0014, 12), brass(), g, [0.022, 0.0016, -0.0095]);
+  for (const z of [-0.0115, 0.0115]) { mesh(box(0.045, 0.0025, 0.0025), M(0x111111), g, [0, -0.0021, z]); mesh(box(0.045, 0.006, 0.0007), brass(), g, [0, -0.006, z]); }
+  for (const z of [-0.009, 0.009]) mesh(box(0.0035, 0.0018, 0.003), M(0x222222), g, [-0.02, 0.0018, z]);
+  mesh(box(0.006, 0.004, 0.0045), M(0xf0eee6, { r: 0.6 }), g, [0.02, 0.0028, 0.0085]);
+  return g;
+}
+function smallBoard(parent, pos, w, d, color, parts) {
+  const g = group(parent, pos, [PI / 2, 0, 0]);
+  mesh(box(w, 0.0016, d), M(color, { r: 0.5 }), g);
+  for (const p of parts) mesh(p.geo, M(p.c, p.o || {}), g, p.pos, p.rot || [0, 0, 0]);
+  return g;
+}
+const encBody = group(E);
+{
+  const pm = () => M(0xd8dcda, { r: 0.42, env: 0.8 });
+  mesh(rbox(W, H, 0.006, 0.003), pm(), encBody, [0, 0, -D / 2 + 0.003]);
+  mesh(rbox(0.006, H, D, 0.003), pm(), encBody, [-W / 2 + 0.003, 0, 0]);
+  mesh(rbox(0.006, H, D, 0.003), pm(), encBody, [W / 2 - 0.003, 0, 0]);
+  mesh(rbox(W, 0.006, D, 0.003), pm(), encBody, [0, H / 2 - 0.003, 0]);
+  mesh(rbox(W, 0.006, D, 0.003), pm(), encBody, [0, -H / 2 + 0.003, 0]);
+  for (const y of [0.075, -0.075]) mesh(cyl(0.006, 0.006, 0.03, 16), M(0xbfc4c2, { r: 0.4 }), encBody, [-W / 2 - 0.004, y, D / 2], [0, 0, 0]);
+  for (const y of [0.08, -0.08]) mesh(rbox(0.012, 0.03, 0.02, 0.003), darkMetal(), encBody, [W / 2 + 0.006, y, D / 2 - 0.006]);
+  mesh(cyl(0.007, 0.007, 0.01, 16), M(0x3b3f3e), encBody, [W / 2 + 0.005, -0.03, 0], [0, 0, PI / 2]);
+  mesh(cyl(0.0055, 0.0055, 0.022, 16), brass(), encBody, [0.05, H / 2 + 0.009, 0]);
+  mesh(cyl(0.008, 0.008, 0.004, 6), brass(), encBody, [0.05, H / 2 + 0.002, 0]);
+  // mounting channels and U-bolts to the pole
+  for (const y of [0.08, -0.08]) {
+    mesh(box(0.16, 0.025, 0.03), galv(), encBody, [0, y, -D / 2 - 0.016]);
+    mesh(new THREE.TorusGeometry(0.035, 0.0035, 8, 24, PI), galv(), encBody, [0, y, P.z - E.position.z], [PI / 2, 0, PI]);
+  }
+}
+const glands = group(E);
+const GX = [-0.07, -0.035, 0, 0.035, 0.07];
+for (const x of GX) {
+  mesh(cyl(0.0075, 0.008, 0.018, 18), blackPl(), glands, [x, -H / 2 - 0.009, 0]);
+  mesh(cyl(0.011, 0.011, 0.005, 6), blackPl(), glands, [x, -H / 2 - 0.0025, 0]);
+}
+addExplode(glands, [0, -0.07, 0]);
+mesh(box(0.18, 0.23, 0.003), M(0xdd8a35, { r: 0.6 }), E, [0, 0, -D / 2 + 0.0075]);
+const boardG = devBoard(E, [0.035, 0.07, PZ + 0.009], [PI / 2, 0, 0]);
+for (const [x, y] of [[0.012, 0.081], [0.058, 0.081], [0.012, 0.059], [0.058, 0.059]]) mesh(cyl(0.0016, 0.0016, 0.007, 8), brass(), E, [x, y, PZ + 0.0035], [PI / 2, 0, 0]);
+reg(boardG, { id: 'board', num: 6, scene: 'field', group: 'Edge', short: 'ESP32-S3 + SX1262', inside: true, anchor: [0, 0.012, 0],
+  name: 'Papan ESP32-S3 + SX1262', part: 'Prototipe: Heltec WiFi LoRa 32 V3 (ESP32-S3 dan SX1262 dalam satu papan). Rancangan akhir: modul ESP32-S3 polos.',
+  spec: 'ESP32-S3: tidur dalam 8,14 µA, aktif 23,9 mA. SX1262: TX 45 mA pada 14 dBm, RX 5,3 mA, tidur 0,6 µA, −137 dBm pada SF12/125 kHz.',
+  role: 'Membaca sensor tiap jam, menyusun 12 fitur harian pukul 00.05, menjalankan inferensi int8, menentukan kelas risiko, mengirim ALERT hanya saat kelas naik, dan menyalakan sirene.',
+  note: 'Pada papan pengembangan, arus tidur terukur akan lebih tinggi dari angka modul karena ada LDO, pengisi daya, dan pembagi tegangan.' });
+addExplode(boardG, [0.015, 0.05, 0.28]);
+const batt = group(E, [-0.05, 0.03, PZ + 0.019]);
+{
+  mesh(rbox(0.04, 0.076, 0.014, 0.003), blackPl(), batt, [0, 0, -0.012]);
+  mesh(cyl(0.016, 0.016, 0.07, 36), M(0x2f74c9, { r: 0.3 }), batt);
+  for (const y of [0.0365, -0.0365]) mesh(cyl(0.0155, 0.0155, 0.003, 36), M(0xc8cdd0, { m: 0.9, r: 0.3 }), batt, [0, y, 0]);
+  mesh(cyl(0.006, 0.006, 0.003, 16), M(0xc8cdd0, { m: 0.9, r: 0.3 }), batt, [0, 0.039, 0]);
+  const lab = canvasTex(96, 128, (c, w, h) => { c.fillStyle = '#2f74c9'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.font = 'bold 16px sans-serif'; c.fillText('LiFePO4', 12, 44); c.fillText('3.2 V', 24, 70); c.fillText('6 Ah', 26, 96); });
+  mesh(cyl(0.01605, 0.01605, 0.04, 24, true, -0.7, 1.4), M(0xffffff, { map: lab, r: 0.35 }), batt, [0, 0, 0]);
+}
+reg(batt, { id: 'batt', num: 4, scene: 'field', group: 'Energi', short: 'LiFePO₄ 6 Ah', inside: true, anchor: [0, 0.048, 0.012],
+  name: 'Sel LiFePO₄ 3,2 V 6 Ah', part: 'Sel litium besi fosfat di dudukan. Bentuk silinder 32700 di model ini hanya ilustrasi.',
+  spec: 'Beban rata-rata 68 µA (1,63 mAh/hari). Dengan DoD 0,8 dan η 0,95, otonomi tanpa matahari ±2.800 hari (nominal) dan 351 hari (pesimistis, 541 µA).',
+  role: 'Menyimpan energi. LiFePO₄ lebih tahan panas dan siklus dibanding Li-ion biasa.' });
+addExplode(batt, [-0.11, 0.03, 0.26]);
+const chg = smallBoard(E, [0.05, -0.012, PZ + 0.002], 0.03, 0.022, 0x1f4fa8, [
+  { geo: box(0.006, 0.0016, 0.006), c: 0x111111, pos: [0, 0.0016, 0] },
+  { geo: box(0.006, 0.004, 0.006), c: 0x555b5e, pos: [-0.009, 0.0028, 0.004] },
+  { geo: box(0.008, 0.007, 0.006), c: 0x2e8b57, pos: [0.010, 0.0042, -0.006] },
+  { geo: box(0.0016, 0.0008, 0.0012), c: 0xff3b2f, o: { e: 0xff2010, ei: 0.8 }, pos: [-0.01, 0.0012, -0.008] }
+]);
+reg(chg, { id: 'chg', num: 3, scene: 'field', group: 'Energi', short: 'Pengisi CN3158', inside: true, anchor: [0, 0.004, 0.012],
+  name: 'Pengisi daya surya CN3158', part: 'Modul pengisi daya dengan pelacakan tegangan panel',
+  spec: 'Batas tegangan pengisian 3,6 V, cocok untuk LiFePO₄. Arus diam pengisi dan regulator diasumsikan 30 µA, setara 44% energi harian, pemakai terbesar di Tabel IV.',
+  role: 'Mengatur pengisian dari panel 6 W ke sel dan mencegah pengisian berlebih.',
+  note: 'Karena arus diam mendominasi anggaran, regulator ber-Iq rendah lebih berdampak daripada mengurangi pengiriman radio.' });
+addExplode(chg, [0.12, 0.062, 0.24]);
+const boost = smallBoard(E, [0.05, -0.05, PZ + 0.002], 0.036, 0.017, 0x1f4fa8, [
+  { geo: cyl(0.004, 0.004, 0.004, 16), c: 0x444a4c, pos: [-0.008, 0.0028, 0] },
+  { geo: box(0.006, 0.006, 0.006), c: 0x3a6fd8, pos: [0.010, 0.0038, 0] },
+  { geo: box(0.004, 0.0014, 0.003), c: 0x111111, pos: [0, 0.0014, 0.004] }
+]);
+reg(boost, { id: 'boost', num: 10, scene: 'field', group: 'Edge', short: 'Boost 12 V', inside: true, anchor: [0, 0.004, 0.012],
+  name: 'Penaik tegangan 12 V', part: 'Modul boost (mis. MT3608) yang diaktifkan GPIO lewat sakelar beban',
+  spec: 'Asumsi 88 mA × 1 s × 4 kali per hari (6% energi harian).',
+  role: 'Memberi 12 V ke transduser GWL hanya saat pembacaan tiap 6 jam (power-gated).' });
+addExplode(boost, [0.12, -0.01, 0.24]);
+const drv = smallBoard(E, [-0.05, -0.058, PZ + 0.002], 0.022, 0.016, 0x1a6b46, [
+  { geo: box(0.01, 0.003, 0.004), c: 0x111111, pos: [0, 0.002, 0.003] },
+  { geo: box(0.007, 0.006, 0.006), c: 0x2e8b57, pos: [0.006, 0.0038, -0.004] }
+]);
+reg(drv, { id: 'drv', num: 11, scene: 'field', group: 'Edge', short: 'Driver MOSFET', inside: true, anchor: [0, 0.004, 0.012],
+  name: 'Driver MOSFET (sirene & sakelar beban)', part: 'Papan kecil dengan MOSFET logic-level dan terminal',
+  spec: 'Dikendalikan GPIO ESP32-S3.',
+  role: 'Menyalakan sirene saat k ≥ 2 dan memutus daya probe tanah di antara pembacaan.',
+  note: 'Komponen pendukung ini tidak tercantum di Tabel III. Ditambahkan agar rangkaian lengkap.' });
+addExplode(drv, [-0.1, -0.022, 0.22]);
+const term = group(E, [0, -0.095, PZ + 0.004]);
+{
+  mesh(box(0.16, 0.035, 0.007), M(0xb9bec2, { m: 0.8, r: 0.35 }), term);
+  const cols = [0xff5a3c, 0x2b2b2b, 0x2f74c9, 0x2b2b2b, 0xffcf4a, 0x2b2b2b, 0x5fd18b, 0x2b2b2b];
+  for (let i = 0; i < 8; i++) { const x = -0.0675 + i * 0.0193; mesh(rbox(0.0062, 0.04, 0.026, 0.001), M(0x9ea5a7, { r: 0.6 }), term, [x, 0, 0.016]); mesh(box(0.0063, 0.008, 0.004), M(cols[i]), term, [x, 0, 0.03]); }
+}
+reg(term, { id: 'term', num: 12, scene: 'field', group: 'Edge', short: 'Blok terminal', inside: true, anchor: [0, 0.022, 0.03],
+  name: 'Rel DIN dan blok terminal', part: 'Blok terminal berkode warna untuk kabel sensor, panel, dan sirene',
+  spec: 'Kabel lapangan masuk lewat lima cable gland di sisi bawah box.',
+  role: 'Memudahkan penggantian sensor di lapangan tanpa menyolder.' });
+addExplode(term, [0, -0.075, 0.18]);
+const dess = group(E, [-0.055, 0.095, PZ + 0.008]);
+mesh(rbox(0.03, 0.022, 0.01, 0.003), M(0xf2f1ea, { r: 0.95 }), dess);
+reg(dess, { id: 'dess', num: 13, scene: 'field', group: 'Edge', short: 'Silika gel', inside: true, anchor: [0, 0.014, 0.006],
+  name: 'Kantong silika gel', part: 'Penyerap kelembapan di dalam box',
+  spec: 'Diganti saat kunjungan pemeliharaan.',
+  role: 'Bersama vent membran, menekan kondensasi di udara gambut yang lembap.' });
+addExplode(dess, [-0.105, 0.065, 0.22]);
+const wires = group(E);
+{
+  const wm = c => M(c, { r: 0.6 });
+  tube([[0.057, 0.079, PZ + 0.012], [0.062, 0.1, -0.01], [0.05, 0.118, 0], [0.05, 0.123, 0]], 0.0012, wm(0x111111), wires);
+  tube([[-0.05, 0.067, PZ + 0.02], [-0.02, 0.07, -0.03], [0.01, 0.06, PZ + 0.012]], 0.0011, wm(0xd23b2b), wires);
+  tube([[0.05, -0.002, PZ + 0.006], [0.03, 0.02, -0.035], [0.02, 0.055, PZ + 0.012]], 0.0011, wm(0xd23b2b), wires);
+  tube([[0.05, -0.04, PZ + 0.006], [0.04, -0.07, -0.03], [0.03, -0.09, PZ + 0.03]], 0.0011, wm(0xffcf4a), wires);
+  tube([[-0.05, -0.05, PZ + 0.006], [-0.04, -0.075, -0.03], [-0.03, -0.09, PZ + 0.03]], 0.0011, wm(0x2f74c9), wires);
+  for (let i = 0; i < 5; i++) tube([[GX[i] * 0.9, -0.105, PZ + 0.032], [GX[i], -0.115, -0.02], [GX[i], -0.121, 0]], 0.0015, wm(0x222222), wires);
+}
+// hinged lid
+const lidPivot = group(E, [-W / 2 - 0.003, 0, D / 2]);
+const lid = group(lidPivot, [W / 2 + 0.003, 0, 0]);
+let ledMat;
+{
+  mesh(rbox(W + 0.006, H + 0.006, 0.014, 0.005), M(0xd8dcda, { r: 0.4, env: 0.8 }), lid, [0, 0, 0.007]);
+  const gk = M(0x1a1a1a, { r: 0.8 });
+  mesh(box(W - 0.006, 0.006, 0.003), gk, lid, [0, H / 2 - 0.006, -0.0005]);
+  mesh(box(W - 0.006, 0.006, 0.003), gk, lid, [0, -H / 2 + 0.006, -0.0005]);
+  mesh(box(0.006, H - 0.006, 0.003), gk, lid, [W / 2 - 0.006, 0, -0.0005]);
+  mesh(box(0.006, H - 0.006, 0.003), gk, lid, [-W / 2 + 0.006, 0, -0.0005]);
+  const sticker = canvasTex(512, 256, (g, w, h) => {
+    g.fillStyle = '#f6f3ea'; g.fillRect(0, 0, w, h); g.fillStyle = '#1f6f4a'; g.fillRect(0, 0, w, 34);
+    g.fillStyle = '#fff'; g.font = '600 22px Inter, sans-serif'; g.fillText('PEATGUARD · node 01', 18, 24);
+    g.fillStyle = '#1b1f1d'; g.font = '20px Inter, sans-serif';
+    ['AS923-2 · 921,4 MHz · SF12', 'Panel 6 W · LiFePO₄ 3,2 V 6 Ah', 'Jangan dibuka saat hujan'].forEach((t, i) => g.fillText(t, 18, 80 + i * 44));
+  });
+  mesh(new THREE.PlaneGeometry(0.12, 0.06), M(0xffffff, { map: sticker, r: 0.7 }), lid, [-0.02, -0.065, 0.0142]);
+  for (const [x, y] of [[-0.088, -0.113], [0.088, -0.113], [-0.088, 0.113], [0.088, 0.113]]) mesh(cyl(0.0045, 0.0045, 0.003, 12), M(0x9aa1a3, { m: 0.8, r: 0.3 }), lid, [x, y, 0.0155], [PI / 2, 0, 0]);
+}
+const ledG = group(lid, [0.065, 0.085, 0.014]);
+{
+  mesh(cyl(0.009, 0.009, 0.004, 24), M(0x222222, { r: 0.4 }), ledG, [0, 0, 0.002], [PI / 2, 0, 0]);
+  ledMat = M(0xffcf4a, { e: 0xffcf4a, ei: 1.4, r: 0.2 });
+  mesh(new THREE.SphereGeometry(0.006, 18, 10, 0, PI * 2, 0, PI / 2), ledMat, ledG, [0, 0, 0.004], [PI / 2, 0, 0]);
+}
+reg(ledG, { id: 'led', num: 8, scene: 'field', group: 'Edge', short: 'LED kelas risiko', anchor: [0, 0.016, 0.006],
+  name: 'LED status kelas risiko', part: 'LED tiga warna di tutup box (tambahan opsional untuk demo dan petugas lapangan)',
+  spec: 'Hijau = Low, kuning = Moderate, oranye = High, merah = Extreme. Ubah lewat tombol Simulasi di bawah.',
+  role: 'Membuat keputusan node bisa dibaca langsung oleh patroli MPA tanpa perangkat tambahan.',
+  note: 'Tidak tercantum di naskah. Hapus jika ingin model sama persis dengan Tabel III.' });
+reg(E, { id: 'enc', num: 5, scene: 'field', group: 'Edge', short: 'Box IP65', anchor: [-W / 2 - 0.015, H / 2, 0],
+  name: 'Box panel IP65', part: 'Box polikarbonat ±200×250×110 mm, tutup berengsel dengan gasket, pelat dudukan, 5 cable gland, vent membran, SMA bulkhead (dimensi ilustrasi)',
+  spec: 'Seluruh elektronika ada di dalam box. Pilih "Terurai" di bar bawah untuk melihat susunannya.',
+  role: 'Melindungi elektronika dari hujan, kabut asap, dan kelembapan tinggi. Dipasang ke tiang dengan dua kanal dan U-bolt.' });
+addExplode(lidPivot, [0, 0, 0.02]);
+
+// ---- external cables
+const cables = group(field);
+{
+  const cm = cableM();
+  const gy = E.position.y - H / 2 - 0.02, gz = E.position.z;
+  const th = (x, z) => terrainH(x, z) + 0.012;
+  const L = -0.036, R = 0.036, PZc = P.z + 0.005;
+  tube([[GX[0], gy, gz], [-0.075, gy - 0.05, gz - 0.02], [L, gy - 0.03, PZc], [L, 1.6, PZc], [L, 2.3, PZc], [-0.01, 2.43, P.z - 0.04], [0, 2.45, P.z - 0.05]], 0.0035, cm, cables);
+  tube([[GX[1], gy, gz], [-0.04, gy - 0.07, gz - 0.03], [R, gy - 0.03, PZc], [R, 1.75, PZc], [0.06, 1.85, P.z], [0.2, 1.845, P.z - 0.012], [0.33, 1.84, P.z - 0.012], [0.34, 1.78, P.z]], 0.003, cm, cables);
+  tube([[L, 1.6, PZc], [L, 1.75, PZc], [-0.08, 1.83, P.z + 0.02], [-0.13, 1.83, P.z + 0.03]], 0.003, cm, cables);
+  tube([[GX[3], gy, gz], [0.03, gy - 0.08, gz - 0.03], [R, gy - 0.04, PZc], [R, 2.0, PZc], [0.02, 2.11, P.z], [-0.3, 2.104, P.z], [-0.55, 2.105, P.z], [-0.56, 2.15, P.z]], 0.003, cm, cables);
+  tube([[GX[2], gy, gz], [0.0, gy - 0.14, gz - 0.02], [0.0, 0.9, P.z + 0.04], [0.0, 0.12, P.z + 0.04], [-0.02, 0.06, P.z + 0.12], [-0.25, th(-0.25, 1.1), 1.1], [-0.45, th(-0.45, 1.35), 1.35], [-0.55, 0.014, DZ - 0.15]], 0.0035, cm, cables);
+  tube([[GX[4], gy, gz], [0.06, gy - 0.14, gz - 0.02], [0.02, 0.9, P.z + 0.04], [0.02, 0.12, P.z + 0.04], [0.06, 0.06, P.z + 0.15], [0.4, th(0.4, 1.15), 1.15], [0.72, th(0.72, 1.45), 1.45], [0.8, 0.2, DZ - 0.01], [0.8, 0.33, DZ]], 0.0035, cm, cables);
+  tube([[GX[3], gy, gz], [0.045, gy - 0.14, gz - 0.02], [0.04, 0.9, P.z + 0.035], [0.04, 0.12, P.z + 0.035], [0.12, 0.06, P.z + 0.1], [0.7, th(0.7, 0.9), 0.9], [1.25, 0.05, 0.93], [1.33, 0.1, 0.93], [1.33, 0.9, 0.93], [1.34, 0.95, 0.95]], 0.003, cm, cables);
+  tube([[0.05, E.position.y + H / 2 + 0.02, gz], [0.05, 1.5, gz - 0.02], [R + 0.004, 1.56, PZc + 0.01], [R + 0.004, 2.0, PZc + 0.01], [0.1, 2.12, P.z], [0.4, 2.115, P.z], [0.5, 2.06, P.z + 0.02], [0.56, 2.12, P.z]], 0.0042, M(0x0e0f0f, { r: 0.45 }), cables);
+}
+
+// ================================================================ BENCH
+const bench = new THREE.Group(); bench.visible = false; scene.add(bench);
+const T = 0.767;
+let mmDisplayTex, mmDial, jumper, nodeTip, serialTex;
+const benchBg = new THREE.Color(0xe8e5de);
+{
+  const floorTex = canvasTex(1024, 1024, (g, w, h) => {
+    g.fillStyle = '#b9b2a6'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = `rgba(${(i + j) % 2 ? 255 : 0},${(i + j) % 2 ? 250 : 0},${(i + j) % 2 ? 240 : 0},.04)`; g.fillRect(i * 128, j * 128, 128, 128); }
+    g.strokeStyle = 'rgba(80,70,60,.25)'; g.lineWidth = 2; for (let i = 0; i <= 8; i++) { g.beginPath(); g.moveTo(i * 128, 0); g.lineTo(i * 128, h); g.moveTo(0, i * 128); g.lineTo(w, i * 128); g.stroke(); }
+    for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(0,0,0,${rnd() * 0.04})`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
+  });
+  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(2, 2);
+  mesh(new THREE.PlaneGeometry(5, 5), M(0xffffff, { map: floorTex, r: 0.8 }), bench, [0, 0, 0.6], [-PI / 2, 0, 0], false);
+  const wall = M(0xebe7df, { r: 0.95 });
+  mesh(new THREE.PlaneGeometry(5, 2.8), wall, bench, [0, 1.4, -0.56], [0, 0, 0], false);
+  mesh(new THREE.PlaneGeometry(4, 2.8), wall, bench, [-1.4, 1.4, 0.6], [0, PI / 2, 0], false);
+  mesh(box(5, 0.08, 0.015), M(0xd8d2c6, { r: 0.7 }), bench, [0, 0.04, -0.552]);
+  // pegboard
+  const peg = canvasTex(1024, 512, (g, w, h) => { g.fillStyle = '#c9a77c'; g.fillRect(0, 0, w, h); g.fillStyle = '#7d6342'; for (let x = 16; x < w; x += 32) for (let y = 16; y < h; y += 32) { g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); } });
+  mesh(new THREE.PlaneGeometry(1.2, 0.6), M(0xffffff, { map: peg, r: 0.85 }), bench, [0, 1.38, -0.555]);
+  for (const [x, y, w2, h2, c] of [[-0.4, 1.42, 0.05, 0.2, 0xd23b2b], [-0.3, 1.4, 0.04, 0.22, 0xffcf4a], [-0.2, 1.43, 0.06, 0.16, 0x2f74c9], [0.25, 1.4, 0.24, 0.05, 0x3a3d3b], [0.4, 1.33, 0.12, 0.12, 0x7a7f7d]]) mesh(rbox(w2, h2, 0.02, 0.005), M(c, { r: 0.5 }), bench, [x, y, -0.54]);
+  // desk
+  const wood = canvasTex(1024, 512, (g, w, h) => {
+    g.fillStyle = '#c69b6d'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 2) { g.fillStyle = `rgba(110,70,35,${0.05 + vnoise(y / 30, 2) * 0.12})`; g.fillRect(0, y, w, 1 + vnoise(y / 9, 5) * 2); }
+    for (let i = 0; i < 6; i++) { g.strokeStyle = 'rgba(100,60,30,.25)'; g.lineWidth = 2; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 30 + rnd() * 50, 6 + rnd() * 8, 0, 0, 7); g.stroke(); }
+  });
+  mesh(rbox(1.42, 0.03, 0.74, 0.006), M(0xffffff, { map: wood, r: 0.55 }), bench, [0, 0.75, 0]);
+  const leg = darkMetal();
+  for (const [x, z] of [[-0.66, -0.32], [0.66, -0.32], [-0.66, 0.32], [0.66, 0.32]]) mesh(box(0.04, 0.735, 0.04), leg, bench, [x, 0.3675, z]);
+  mesh(box(1.32, 0.05, 0.02), leg, bench, [0, 0.71, -0.33]);
+  const matTex = canvasTex(1024, 512, (g, w, h) => { g.fillStyle = '#2d5a4b'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 2; for (let x = 0; x < w; x += 40) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y < h; y += 40) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } g.fillStyle = '#c9d0cc'; g.beginPath(); g.arc(w - 30, 30, 10, 0, 7); g.fill(); });
+  mesh(rbox(1.1, 0.003, 0.56, 0.0014), M(0xffffff, { map: matTex, r: 0.85 }), bench, [-0.02, T - 0.0015, 0.02]);
+
+  // ---- desk lamp (articulated: base → lower arm → upper arm → head)
+  {
+    const lampM = M(0x2c3033, { m: 0.55, r: 0.35 });
+    const jointM = M(0x8d9497, { m: 0.85, r: 0.3 });
+    const lamp = group(bench, [-0.56, T, -0.22], [0, 0.55, 0]);
+    function rod(a, b, r, mat) {
+      const d = b.clone().sub(a), len = d.length();
+      const m = mesh(cyl(r, r, len, 14), mat, lamp);
+      m.position.copy(a).add(b).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(V3(0, 1, 0), d.normalize());
+      return m;
+    }
+    function joint(p, r = 0.012) { const m = mesh(cyl(r, r, 0.022, 20), jointM, lamp, [p.x, p.y, p.z], [0, 0, PI / 2]); return m; }
+    mesh(cyl(0.075, 0.08, 0.018, 40), lampM, lamp, [0, 0.009, 0]);
+    mesh(cyl(0.05, 0.06, 0.012, 32), lampM, lamp, [0, 0.024, 0]);
+    mesh(cyl(0.012, 0.016, 0.03, 16), lampM, lamp, [0, 0.045, 0]);
+    const j1 = V3(0, 0.065, 0), j2 = V3(0, 0.36, 0.1), j3 = V3(0, 0.44, 0.38);
+    joint(j1, 0.014); joint(j2); joint(j3, 0.011);
+    for (const dx of [-0.008, 0.008]) { rod(j1.clone().setX(dx), j2.clone().setX(dx), 0.0045, lampM); rod(j2.clone().setX(dx), j3.clone().setX(dx), 0.004, lampM); }
+    // balance springs
+    rod(V3(0.014, 0.1, 0.015), V3(0.014, 0.3, 0.085), 0.0025, jointM);
+    rod(V3(0.014, 0.39, 0.15), V3(0.014, 0.43, 0.3), 0.0022, jointM);
+    // head: neck + shade pointing down toward the mat
+    const dir = V3(0, -1, 0.35).normalize();
+    const neckEnd = j3.clone().addScaledVector(dir, 0.035);
+    rod(j3, neckEnd, 0.007, lampM);
+    const head = group(lamp, [neckEnd.x, neckEnd.y, neckEnd.z]);
+    head.quaternion.setFromUnitVectors(V3(0, 1, 0), dir.clone().negate());
+    mesh(cyl(0.022, 0.026, 0.03, 28), lampM, head, [0, -0.012, 0]);
+    mesh(cyl(0.026, 0.068, 0.085, 36, true), M(0x2c3033, { m: 0.55, r: 0.35, side: THREE.DoubleSide }), head, [0, -0.07, 0]);
+    mesh(new THREE.TorusGeometry(0.068, 0.003, 8, 48), jointM, head, [0, -0.1125, 0], [PI / 2, 0, 0]);
+    mesh(new THREE.SphereGeometry(0.022, 20, 12), M(0xfff6e2, { e: 0xfff0cf, ei: 2.2, r: 0.2 }), head, [0, -0.06, 0]);
+    // cable from base
+    // warm light pool on the mat
+    lamp.updateMatrixWorld(true);
+    const cb = lamp.localToWorld(V3(0, 0.012, -0.078));
+    tube([[cb.x, cb.y, cb.z], [cb.x - 0.01, T + 0.004, -0.33], [cb.x - 0.015, T + 0.002, -0.366], [cb.x - 0.02, T - 0.03, -0.378], [cb.x - 0.03, 0.35, -0.39], [cb.x - 0.04, 0.012, -0.42], [cb.x - 0.12, 0.004, -0.46]], 0.0025, M(0x1a1a1a, { r: 0.6 }), bench);
+    const spot = new THREE.SpotLight(0xffe2b8, 2.2, 1.4, 0.75, 0.6, 1.5);
+    spot.position.copy(head.localToWorld(V3(0, -0.06, 0)));
+    spot.target.position.copy(spot.position.clone().add(dir.clone().applyQuaternion(lamp.quaternion).multiplyScalar(0.5)));
+    bench.add(spot); bench.add(spot.target);
+    reg(lamp, { id: 'bLamp', num: 'B8', scene: 'bench', group: 'Uji', short: 'Lampu meja', anchor: [0, 0.48, 0.38],
+      name: 'Lampu meja berlengan', part: 'Lampu kerja dengan dua lengan berpegas dan kepala yang bisa diarahkan',
+      spec: 'Hanya perlengkapan meja, tidak tersambung ke rangkaian uji.',
+      role: 'Penerangan saat menyolder dan membaca layar multimeter. Untuk foto, arahkan cahaya agar layar multimeter tidak silau.' });
+  }
+
+  // ---- node under test
+  const nb = devBoard(bench, [-0.2, T + 0.009, -0.02], [0, 0, 0]);
+  for (const [x, z] of [[-0.022, -0.0115], [0.022, -0.0115], [-0.022, 0.0115], [0.022, 0.0115]]) mesh(cyl(0.002, 0.002, 0.008, 8), M(0x222222), nb, [x, -0.005, z]);
+  tube([[0.022, 0.0025, -0.0095], [0.03, 0.01, -0.015], [0.038, 0.006, -0.02]], 0.0009, M(0x111111), nb);
+  mesh(rbox(0.009, 0.009, 0.009, 0.001), brass(), nb, [0.042, 0.004, -0.02]);
+  mesh(cyl(0.0045, 0.0055, 0.012, 16), M(0x161616, { r: 0.4 }), nb, [0.042, 0.014, -0.02]);
+  mesh(cyl(0.0042, 0.0034, 0.1, 14), M(0x161616, { r: 0.4 }), nb, [0.042, 0.07, -0.02]);
+  nodeTip = V3(-0.2 + 0.042, T + 0.009 + 0.12, -0.04);
+  reg(nb, { id: 'bNode', num: 'B1', scene: 'bench', group: 'Uji', short: 'Papan node', anchor: [0, 0.02, 0],
+    name: 'Papan node yang diukur', part: 'Heltec WiFi LoRa 32 V3 (ESP32-S3 + SX1262) dengan antena terpasang',
+    spec: 'Di-flash dengan node.ino. Pilih TEST_MODE: SLEEP, ACTIVE, TX, RX, atau NODE.',
+    role: 'Perangkat yang diukur. USB dicabut saat mengukur agar daya hanya datang dari baterai melalui multimeter.',
+    note: 'Jangan menyalakan radio tanpa antena. SX1262 bisa rusak.' });
+
+  // ---- battery
+  const bat = group(bench, [-0.38, T + 0.005, 0.12], [0, 0.2, 0]);
+  mesh(rbox(0.036, 0.009, 0.052, 0.003), M(0xb9c1c9, { m: 0.55, r: 0.32 }), bat);
+  const bl = canvasTex(128, 192, (g, w, h) => { g.fillStyle = '#eef3f6'; g.fillRect(0, 0, w, h); g.fillStyle = '#1b1f1d'; g.font = 'bold 22px sans-serif'; g.fillText('Li-ion', 30, 70); g.fillText('3.7 V', 34, 104); g.font = '16px sans-serif'; g.fillText('1200 mAh', 28, 134); g.fillStyle = '#d23b2b'; g.fillRect(0, 160, w, 32); });
+  mesh(new THREE.PlaneGeometry(0.03, 0.044), M(0xffffff, { map: bl, r: 0.6 }), bat, [0, 0.0047, 0], [-PI / 2, 0, 0]);
+  reg(bat, { id: 'bBat', num: 'B2', scene: 'bench', group: 'Uji', short: 'Baterai 3,7 V', anchor: [0, 0.012, 0],
+    name: 'Baterai Li-ion 3,7 V', part: 'Baterai pouch dengan konektor JST 1,25 mm, atau catu daya lab 3,7 V',
+    spec: 'Kabel merah (+) dilewatkan ke multimeter. Kabel hitam (−) langsung ke papan.',
+    role: 'Catu daya selama pengukuran.',
+    note: 'Papan pengembangan diberi 3,7 V, sedangkan rancangan lapangan memakai LiFePO₄ 3,2 V. Sebutkan perbedaan ini di naskah.' });
+
+  // ---- wiring: battery(+) → clip A → meter → clip B → board(+)
+  const red = M(0xd23b2b, { r: 0.45 }), blk = M(0x161616, { r: 0.45 });
+  const clipA = V3(-0.31, T + 0.007, 0.06), clipB = V3(-0.24, T + 0.007, 0.045);
+  const jst = V3(-0.18, T + 0.014, -0.0115);
+  bat.updateMatrixWorld(true);
+  const bp = bat.localToWorld(V3(0.006, 0, -0.027)), bn = bat.localToWorld(V3(-0.006, 0, -0.027));
+  tube([[bp.x, bp.y, bp.z], [bp.x + 0.01, T + 0.012, bp.z - 0.02], [clipA.x - 0.016, T + 0.008, clipA.z]], 0.0013, red, bench);
+  tube([[bn.x, bn.y, bn.z], [bn.x, T + 0.03, bn.z - 0.06], [-0.24, T + 0.03, -0.02], [jst.x, jst.y, jst.z]], 0.0013, blk, bench);
+  tube([[jst.x, jst.y, jst.z], [-0.175, T + 0.03, 0.01], [-0.21, T + 0.012, 0.04], [clipB.x + 0.016, T + 0.008, clipB.z]], 0.0013, red, bench);
+  function croc(p, color, ry) {
+    const c = group(bench, [p.x, p.y, p.z], [0, ry, 0]);
+    mesh(cyl(0.0055, 0.0042, 0.03, 16), M(color, { r: 0.45 }), c, [-0.014, 0, 0], [0, 0, PI / 2]);
+    const jaw = M(0xc0c5c8, { m: 0.9, r: 0.3 });
+    mesh(box(0.024, 0.0018, 0.006), jaw, c, [0.012, 0.0022, 0], [0, 0, 0.06]);
+    mesh(box(0.024, 0.0018, 0.006), jaw, c, [0.012, -0.0022, 0], [0, 0, -0.06]);
+    return c;
+  }
+  croc(clipA, 0xd23b2b, 0); croc(clipB, 0x161616, PI);
+
+  // ---- multimeter
+  const mm = group(bench, [-0.03, T + 0.018, 0.17], [0, -0.22, 0]);
+  mesh(rbox(0.1, 0.036, 0.19, 0.012, 3), M(0xe5b414, { r: 0.65 }), mm);
+  mesh(rbox(0.082, 0.004, 0.172, 0.004), M(0x26292b, { r: 0.55 }), mm, [0, 0.017, 0]);
+  const face = canvasTex(256, 540, (g, w, h) => {
+    g.fillStyle = '#26292b'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e8eaeb'; g.font = 'bold 15px sans-serif';
+    const cx = w / 2, cy = 330, lab = ['OFF', 'V~', 'V⎓', 'Ω', 'µA', 'mA', 'A', 'Hz'];
+    lab.forEach((t, i) => { const a = -PI * 0.92 + i * (PI * 1.84 / (lab.length - 1)); g.fillText(t, cx + Math.cos(a) * 96 - 12, cy + Math.sin(a) * 96 + 5); });
+    g.font = 'bold 13px sans-serif'; [['10A', 36], ['mA µA', 92], ['COM', 160], ['VΩ', 214]].forEach(([t, x]) => g.fillText(t, x - 14, 505));
+    g.fillStyle = '#ffcf4a'; g.fillText('SELECT   MAX   HOLD', 54, 214);
+  });
+  mesh(new THREE.PlaneGeometry(0.082, 0.172), M(0xffffff, { map: face, r: 0.55 }), mm, [0, 0.0192, 0], [-PI / 2, 0, 0]);
+  mesh(rbox(0.07, 0.003, 0.04, 0.003), M(0x111314, { r: 0.3 }), mm, [0, 0.0195, -0.058]);
+  mmDisplayTex = canvasTex(320, 170, () => {});
+  mesh(new THREE.PlaneGeometry(0.064, 0.034), M(0xffffff, { map: mmDisplayTex, r: 0.15, e: 0x8a9a7a, ei: 0.25 }), mm, [0, 0.0212, -0.058], [-PI / 2, 0, 0]);
+  for (const x of [-0.024, 0, 0.024]) mesh(rbox(0.016, 0.004, 0.008, 0.002), M(0x3a3e40, { r: 0.5 }), mm, [x, 0.0205, -0.026]);
+  mmDial = group(mm, [0, 0.022, 0.012]);
+  mesh(cyl(0.026, 0.028, 0.008, 40), M(0x1b1d1e, { r: 0.35 }), mmDial);
+  mesh(rbox(0.007, 0.007, 0.046, 0.003), M(0x2b2f31, { r: 0.4 }), mmDial, [0, 0.006, 0]);
+  mesh(box(0.0025, 0.0012, 0.012), M(0xffffff), mmDial, [0, 0.0098, -0.016]);
+  const jacks = [[-0.03, 0xd23b2b], [-0.01, 0xd23b2b], [0.012, 0x161616], [0.033, 0xd23b2b]];
+  for (const [x, c] of jacks) { mesh(cyl(0.0058, 0.0058, 0.004, 20), M(c, { r: 0.4 }), mm, [x, 0.02, 0.078]); mesh(cyl(0.0024, 0.0024, 0.005, 12), M(0x0a0a0a), mm, [x, 0.021, 0.078]); }
+  for (const [x, c] of [[-0.01, 0xd23b2b], [0.012, 0x161616]]) mesh(cyl(0.0045, 0.0045, 0.022, 16), M(c, { r: 0.45 }), mm, [x, 0.033, 0.078]);
+  mm.updateMatrixWorld(true);
+  const jR = mm.localToWorld(V3(-0.01, 0.045, 0.078)), jC = mm.localToWorld(V3(0.012, 0.045, 0.078));
+  tube([[jR.x, jR.y, jR.z], [jR.x - 0.01, jR.y + 0.03, jR.z + 0.05], [-0.18, T + 0.05, 0.16], [-0.3, T + 0.03, 0.1], [clipA.x - 0.028, clipA.y, clipA.z]], 0.0019, red, bench);
+  tube([[jC.x, jC.y, jC.z], [jC.x, jC.y + 0.04, jC.z + 0.06], [-0.12, T + 0.06, 0.14], [-0.2, T + 0.035, 0.07], [clipB.x + 0.028, clipB.y, clipB.z]], 0.0019, blk, bench);
+  reg(mm, { id: 'bMM', num: 'B3', scene: 'bench', group: 'Uji', short: 'Multimeter (seri)', anchor: [0, 0.03, -0.058],
+    name: 'Multimeter digital, dipasang seri', part: 'Probe merah di soket mA/µA, probe hitam di COM, fitur MAX/HOLD',
+    spec: 'Baterai (+) → probe merah → multimeter → probe hitam → (+) papan. Ulangi tiap uji 3 kali dan catat rata-rata ± rentang.',
+    role: 'Mengukur arus tidur (µA) serta arus aktif, TX, dan RX (mA) untuk mengganti angka datasheet di Tabel IV.',
+    note: 'Layar sengaja kosong: isi dengan hasil ukur tim. Multimeter terlalu lambat untuk menangkap puncak paket 1,3 s dengan tepat, jadi sebut ini sebagai keterbatasan.' });
+
+  // ---- bypass jumper
+  jumper = group(bench);
+  tube([[clipA.x + 0.004, clipA.y + 0.006, clipA.z], [-0.29, T + 0.045, 0.02], [-0.25, T + 0.045, 0.012], [clipB.x - 0.004, clipB.y + 0.006, clipB.z]], 0.0017, M(0x2fa84f, { r: 0.45 }), jumper);
+  jumper.visible = false;
+  reg(jumper, { id: 'bJmp', num: 'B4', scene: 'bench', group: 'Uji', short: 'Jumper bypass', anchor: [-0.27, T + 0.05, 0.016],
+    name: 'Jumper bypass', part: 'Kabel buaya hijau yang menghubung-singkatkan kedua probe multimeter',
+    spec: 'Pasang saat papan menyala, lepas setelah papan masuk tidur dalam, lalu baca rentang µA.',
+    role: 'Mencegah brownout/reset berulang akibat hambatan shunt multimeter pada rentang µA saat lonjakan arus boot.' });
+
+  // ---- receiver + laptop
+  const rb = devBoard(bench, [0.1, T + 0.009, -0.2], [0, 0.3, 0]);
+  mesh(rbox(0.009, 0.009, 0.009, 0.001), brass(), rb, [0.042, 0.004, -0.02]);
+  mesh(cyl(0.0042, 0.0034, 0.1, 14), M(0x161616, { r: 0.4 }), rb, [0.042, 0.06, -0.02]);
+  rb.updateMatrixWorld(true);
+  const usb = rb.localToWorld(V3(-0.03, 0.0024, 0));
+  reg(rb, { id: 'bRx', num: 'B5', scene: 'bench', group: 'Uji', short: 'Papan penerima', anchor: [0, 0.02, 0],
+    name: 'Papan penerima (pengganti gateway)', part: 'Heltec WiFi LoRa 32 V3 kedua dengan receiver.ino, tersambung USB ke laptop',
+    spec: 'Radio sama dengan node: 921,4 MHz, SF12, BW 125 kHz, CR 4/5, sync word 0x12.',
+    role: 'Membuktikan paket ALERT/HEARTBEAT diterima, lengkap dengan kelas, RSSI, dan SNR. Papan yang sama dipakai untuk uji jarak di luar ruangan.' });
+  const lap = group(bench, [0.42, T, -0.11], [0, -0.38, 0]);
+  const alu = M(0xa9aeb2, { m: 0.75, r: 0.35 });
+  mesh(rbox(0.32, 0.015, 0.22, 0.006), alu, lap, [0, 0.0075, 0]);
+  const kb = canvasTex(512, 256, (g, w, h) => { g.fillStyle = '#9ea3a7'; g.fillRect(0, 0, w, h); g.fillStyle = '#2a2d30'; for (let r = 0; r < 5; r++) for (let k = 0; k < 14; k++) g.fillRect(14 + k * 35, 14 + r * 36, 30, 30); g.fillRect(120, 194, 270, 30); });
+  mesh(new THREE.PlaneGeometry(0.28, 0.11), M(0xffffff, { map: kb, r: 0.6 }), lap, [0, 0.0152, -0.025], [-PI / 2, 0, 0]);
+  mesh(rbox(0.1, 0.001, 0.06, 0.0005), M(0x9a9fa3, { m: 0.6, r: 0.3 }), lap, [0, 0.0152, 0.07]);
+  const hinge = group(lap, [0, 0.015, -0.108], [-0.3, 0, 0]);
+  mesh(rbox(0.32, 0.21, 0.008, 0.006), alu, hinge, [0, 0.105, 0]);
+  mesh(box(0.306, 0.196, 0.001), M(0x0c0d0e, { r: 0.2 }), hinge, [0, 0.105, 0.0042]);
+  serialTex = canvasTex(800, 500, () => {});
+  mesh(new THREE.PlaneGeometry(0.29, 0.18), new THREE.MeshBasicMaterial({ map: serialTex, toneMapped: false }), hinge, [0, 0.105, 0.006]);
+  lap.updateMatrixWorld(true);
+  const port = lap.localToWorld(V3(-0.16, 0.007, 0.03));
+  tube([[usb.x, usb.y, usb.z], [usb.x - 0.03, T + 0.006, usb.z + 0.04], [0.15, T + 0.006, -0.08], [port.x - 0.03, T + 0.006, port.z + 0.01], [port.x, port.y, port.z]], 0.0024, M(0x2a2a2a, { r: 0.55 }), bench);
+  reg(lap, { id: 'bLap', num: 'B6', scene: 'bench', group: 'Uji', short: 'Laptop · Serial Monitor', anchor: [0, 0.23, -0.16],
+    name: 'Laptop dengan Serial Monitor', part: 'Arduino IDE, Serial Monitor 115200 baud',
+    spec: 'Teks di layar mengikuti format keluaran receiver.ino. Angkanya contoh, bukan hasil ukur.',
+    role: 'Bahan tangkapan layar untuk naskah: bukti paket diterima, kelas, RSSI, dan SNR.' });
+
+  // ---- log sheet + pen
+  const note = group(bench, [0.33, T + 0.002, 0.19], [0, 0.12, 0]);
+  const sheet = canvasTex(600, 800, (g, w, h) => {
+    g.fillStyle = '#fbfaf5'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#1b1f1d'; g.font = '600 34px Inter, sans-serif'; g.fillText('Log pengukuran arus', 40, 70);
+    g.font = '22px Inter, sans-serif'; g.fillStyle = '#5c6862'; g.fillText('Papan: Heltec V3 · Catu: 3,7 V · Tanggal: ______', 40, 108);
+    const cols = ['Mode', 'Uji 1', 'Uji 2', 'Uji 3', 'Rata-rata'], cw = [130, 95, 95, 95, 125];
+    let x = 40; const y0 = 150, rh = 70;
+    g.strokeStyle = '#9aa39e'; g.lineWidth = 2; g.fillStyle = '#1b1f1d'; g.font = '600 22px Inter, sans-serif';
+    cols.forEach((c, i) => { g.fillText(c, x + 8, y0 + 44); x += cw[i]; });
+    const rows = ['Tidur µA', 'Aktif mA', 'TX mA', 'RX mA'];
+    for (let r = 0; r <= 5; r++) { g.beginPath(); g.moveTo(40, y0 + r * rh); g.lineTo(580, y0 + r * rh); g.stroke(); }
+    x = 40; for (let i = 0; i <= cw.length; i++) { g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y0 + 5 * rh); g.stroke(); x += cw[i] || 0; }
+    g.font = '22px Inter, sans-serif'; rows.forEach((r, i) => g.fillText(r, 48, y0 + (i + 1) * rh + 44));
+    g.fillStyle = '#5c6862'; g.font = '20px Inter, sans-serif';
+    ['Lepas USB sebelum mengukur.', 'Jumper bypass saat boot, lepas sebelum baca µA.', 'TX: pakai MAX HOLD (puncak paket SF12).'].forEach((t, i) => g.fillText('• ' + t, 40, 590 + i * 36));
+  });
+  mesh(rbox(0.15, 0.006, 0.2, 0.002), M(0x2c4d7a, { r: 0.6 }), note, [0, 0.003, 0]);
+  mesh(new THREE.PlaneGeometry(0.14, 0.19), M(0xffffff, { map: sheet, r: 0.85 }), note, [0, 0.0062, 0], [-PI / 2, 0, 0]);
+  mesh(cyl(0.004, 0.004, 0.14, 12), M(0x1d4f9c, { r: 0.4 }), note, [0.09, 0.006, 0.01], [PI / 2, 0, 0.25]);
+  reg(note, { id: 'bLog', num: 'B7', scene: 'bench', group: 'Uji', short: 'Lembar catat', anchor: [0, 0.01, -0.08],
+    name: 'Lembar catat pengukuran', part: 'Tabel kosong: mode × 3 ulangan × rata-rata',
+    spec: 'Baris: tidur (µA), aktif, TX, RX (mA).',
+    role: 'Hasilnya dimasukkan ke dict MEASURED di energy_budget.py untuk menghitung ulang Tabel IV dan otonomi.' });
+  // parts trays with components + mug
+  {
+    const trayAt = (x, c, fill) => {
+      const t = group(bench, [x, T, -0.3]);
+      const pm = M(c, { r: 0.35, t: true, o: 0.85, env: 0.9 });
+      mesh(rbox(0.1, 0.004, 0.07, 0.0015), pm, t, [0, 0.002, 0]);
+      mesh(rbox(0.1, 0.035, 0.004, 0.0015), pm, t, [0, 0.0175, 0.033]);
+      mesh(rbox(0.1, 0.035, 0.004, 0.0015), pm, t, [0, 0.0175, -0.033]);
+      mesh(rbox(0.004, 0.035, 0.07, 0.0015), pm, t, [0.048, 0.0175, 0]);
+      mesh(rbox(0.004, 0.035, 0.07, 0.0015), pm, t, [-0.048, 0.0175, 0]);
+      fill(t);
+    };
+    trayAt(-0.07, 0x2f74c9, t => { for (let i = 0; i < 14; i++) { const r = mesh(cyl(0.002, 0.002, 0.012, 8), M([0xd9c6a0, 0x8fb3d9][i % 2], { r: 0.5 }), t, [(rnd() - 0.5) * 0.08, 0.008, (rnd() - 0.5) * 0.05], [PI / 2, rnd() * 3, 0]); r.castShadow = false; } });
+    trayAt(0.05, 0xd23b2b, t => { for (let i = 0; i < 10; i++) mesh(cyl(0.0035, 0.0035, 0.006, 6), M(0xb7bdc1, { m: 0.9, r: 0.3 }), t, [(rnd() - 0.5) * 0.08, 0.007, (rnd() - 0.5) * 0.05], [rnd(), 0, rnd()]); });
+    trayAt(0.17, 0xe6b400, t => { for (let i = 0; i < 6; i++) mesh(box(0.01, 0.004, 0.014), M(0x1b1d1c, { r: 0.4 }), t, [(rnd() - 0.5) * 0.07, 0.007, (rnd() - 0.5) * 0.04], [0, rnd() * 3, 0]); });
+    const mug = group(bench, [0.62, T, 0.08]);
+    mesh(cyl(0.04, 0.036, 0.095, 36), M(0xf2efe6, { r: 0.3, env: 0.9 }), mug, [0, 0.0475, 0]);
+    mesh(new THREE.CircleGeometry(0.036, 32), M(0x3b2416, { r: 0.15 }), mug, [0, 0.085, 0], [-PI / 2, 0, 0]);
+    mesh(new THREE.TorusGeometry(0.022, 0.006, 10, 24), M(0xf2efe6, { r: 0.3 }), mug, [0.045, 0.05, 0], [0, 0, 0]);
+  }
+}
+const MODES = {
+  sleep: { unit: 'µA', dial: 4, title: 'Uji tidur', what: 'Pasang jumper saat menyalakan papan. Setelah papan tidur dalam, lepas jumper dan baca nilai stabil selama 10 s.', row: 'Tabel IV: MCU and radio sleep · datasheet modul 8,7 µA', range: 'Rentang: µA' },
+  active: { unit: 'mA', dial: 5, title: 'Uji aktif', what: 'Baca nilai stabil selama 20 s inferensi int8. Radio dalam keadaan tidur.', row: 'Tabel IV: MCU active · datasheet 23,9 mA', range: 'Rentang: mA' },
+  tx: { unit: 'mA', dial: 5, title: 'Uji kirim (TX)', what: 'Aktifkan MAX HOLD dan catat puncak dari 5 paket SF12 (±1,3 s per paket). Antena wajib terpasang.', row: 'Tabel IV: LoRa TX · datasheet 45 mA pada 14 dBm', range: 'Rentang: mA + MAX' },
+  rx: { unit: 'mA', dial: 5, title: 'Uji terima (RX)', what: 'Baca nilai stabil selama 10 s penerimaan kontinu.', row: 'Tabel IV: LoRa RX · datasheet 5,3 mA', range: 'Rentang: mA' }
+};
+let benchMode = 'sleep';
+function drawMM() {
+  const g = mmDisplayTex.userData.ctx, w = 320, h = 170, md = MODES[benchMode];
+  g.fillStyle = '#aab69c'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#1b231a';
+  g.font = 'bold 86px monospace'; g.fillText('-.--', 28, 112);
+  g.font = 'bold 34px sans-serif'; g.fillText(md.unit, 236, 112);
+  g.font = 'bold 18px sans-serif'; g.fillText('DC', 16, 30);
+  if (benchMode === 'tx') g.fillText('MAX', 250, 30);
+  g.font = '16px sans-serif'; g.fillText('isi dengan hasil ukur', 72, 152);
+  mmDisplayTex.needsUpdate = true;
+  mmDial.rotation.y = -(md.dial - 3.5) * 0.4;
+  document.getElementById('bnTitle').textContent = md.title;
+  document.getElementById('bnWhat').textContent = md.what;
+  document.getElementById('bnRange').textContent = md.range;
+  document.getElementById('bnRow').textContent = md.row;
+}
+const serialLines = [];
+function pushSerial(s) { serialLines.push(s); while (serialLines.length > 13) serialLines.shift(); drawSerial(); }
+function drawSerial() {
+  const g = serialTex.userData.ctx, w = 800, h = 500;
+  g.fillStyle = '#101315'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#262c30'; g.fillRect(0, 0, w, 40);
+  g.fillStyle = '#d4dadd'; g.font = 'bold 19px sans-serif'; g.fillText('Serial Monitor · 115200 baud  (format receiver.ino, angka contoh)', 14, 27);
+  g.font = '19px monospace';
+  serialLines.slice(-11).forEach((s, i) => { g.fillStyle = s.startsWith('ALERT') ? '#ff9a6b' : s.startsWith('HEARTBEAT') ? '#8fe0a8' : '#a9c7ff'; g.fillText(s, 14, 80 + i * 38); });
+  serialTex.needsUpdate = true;
+}
+pushSerial('receiver init code 0');
+pushSerial('HEARTBEAT node 1 #41 class Low p 0.0213 GWL 0.45 m RSSI -61.0 SNR 9.5');
+drawMM();
+
+// ================================================================ state + UI
+const CLS = [['Low', '#3dbb6b', 0x3dbb6b], ['Moderate', '#e6b400', 0xffcf4a], ['High', '#f07a2b', 0xff8a3d], ['Extreme', '#e0322a', 0xff3b2f]];
+const state = { scene: 'field', markers: true, lid: 'buka', explodeT: 0, lidA: -1.95, anim: true, k: 1, sel: null, hover: null, hoverUI: null, isolate: true, photo: false, sirenUntil: 0, dragging: false };
+const $ = id => document.getElementById(id);
+const sceneComps = () => comps.filter(c => c.scene === state.scene).sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group) || String(a.num).localeCompare(String(b.num), undefined, { numeric: true }));
+const byNum = () => comps.filter(c => c.scene === state.scene).sort((a, b) => String(a.num).localeCompare(String(b.num), undefined, { numeric: true }));
+
+function buildRail() {
+  const L = $('list'); L.innerHTML = '';
+  const items = sceneComps();
+  $('count').textContent = items.length;
+  let last = null;
+  for (const c of items) {
+    if (c.group !== last) { const h = document.createElement('div'); h.className = 'grp'; h.style.setProperty('--gc', `var(--g-${c.group})`); h.textContent = GROUP_NAME[c.group]; L.appendChild(h); last = c.group; }
+    const r = document.createElement('div'); r.className = 'row' + (state.sel === c.id ? ' on' : ''); r.dataset.id = c.id;
+    r.style.setProperty('--gc', `var(--g-${c.group})`);
+    r.innerHTML = `<span class="num">${c.num}</span><span>${c.name}</span>`;
+    r.onmouseenter = () => { state.hoverUI = c.id; };
+    r.onmouseleave = () => { if (state.hoverUI === c.id) state.hoverUI = null; };
+    r.onclick = () => { select(c.id); if (innerWidth <= 900) document.body.classList.remove('railopen'); };
+    L.appendChild(r);
+  }
+}
+function renderCard(c) {
+  const n = $('cNum'); n.textContent = c.num; n.style.setProperty('--gc', `var(--g-${c.group})`);
+  $('cGroup').textContent = GROUP_NAME[c.group];
+  $('cName').textContent = c.name;
+  $('cBody').innerHTML = [['Komponen', c.part], ['Spesifikasi kunci', c.spec], ['Peran dalam sistem', c.role]].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') + (c.note ? `<div class="note">${c.note}</div>` : '');
+  const list = byNum(); const i = list.indexOf(c);
+  $('cPos').textContent = `${i + 1} / ${list.length}`;
+  $('card').hidden = false;
+}
+function step(d) {
+  const list = byNum(); if (!list.length) return;
+  let i = state.sel ? list.findIndex(c => c.id === state.sel) : -1;
+  i = (i + d + list.length) % list.length;
+  select(list[i].id);
+}
+$('cPrev').onclick = () => step(-1);
+$('cNext').onclick = () => step(1);
+$('cClose').onclick = () => select(null);
+$('cIso').onchange = e => { state.isolate = e.target.checked; applyIsolation(); };
+
+// ---- isolation (fade everything else)
+const ghostMat = new THREE.MeshStandardMaterial({ color: 0xc4ccc7, transparent: true, opacity: 0.1, depthWrite: false, roughness: 1 });
+function applyIsolation() {
+  const id = state.isolate ? state.sel : null;
+  const root = state.scene === 'field' ? field : bench;
+  root.traverse(o => {
+    if (o.userData.veg) { o.visible = !id; return; }
+    if (!o.isMesh || o.userData.noGhost) return;
+    const keep = !id || o.userData.compId === id;
+    if (!keep) {
+      if (!o.userData.mat0) { o.userData.mat0 = o.material; o.userData.cs0 = o.castShadow; }
+      o.material = ghostMat; o.castShadow = false;
+    } else if (o.userData.mat0) {
+      o.material = o.userData.mat0; o.castShadow = o.userData.cs0; delete o.userData.mat0;
+    }
+  });
+  occDirty = true;
+}
+function setEmissive(c, hex, k) { for (const m of c.meshes) { if (m.material === ghostMat || !m.material.emissive) continue; m.material.emissive.setHex(hex); m.material.emissiveIntensity = k; } c.tinted = true; }
+function clearEmissive(c) { for (const m of c.meshes) { const mt = m.userData.mat0 || m.material; if (mt === ghostMat || !mt.userData.e0) continue; mt.emissive.copy(mt.userData.e0); mt.emissiveIntensity = mt.userData.ei0; } c.tinted = false; }
+
+function select(id) {
+  state.sel = id;
+  document.querySelectorAll('#list .row').forEach(r => r.classList.toggle('on', r.dataset.id === id));
+  if (!id) { $('card').hidden = true; applyIsolation(); return; }
+  const c = comps.find(x => x.id === id);
+  if (c.inside && state.lid === 'tutup') setLid('buka');
+  renderCard(c);
+  applyIsolation();
+  focusObj(c.obj);
+  const row = document.querySelector(`#list .row[data-id="${id}"]`); if (row) row.scrollIntoView({ block: 'nearest' });
+  if (innerWidth <= 900) document.body.classList.remove('railopen');
+}
+
+// ---- camera
+let tween = null;
+function fit(pos, target) { const a = camera.aspect, f = a < 1.45 ? Math.min(1.9, 1.45 / a) : 1; return target.clone().add(pos.clone().sub(target).multiplyScalar(f)); }
+function flyTo(pos, target, dur = 0.9) { tween = { t: 0, dur, p0: camera.position.clone(), t0: controls.target.clone(), p1: pos.clone(), t1: target.clone() }; }
+function focusObj(obj) {
+  const b = new THREE.Box3();
+  obj.updateMatrixWorld(true);
+  obj.traverse(o => { if (o.isMesh && !o.userData.pass) { o.geometry.computeBoundingBox(); b.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)); } });
+  if (b.isEmpty()) return;
+  const center = b.getCenter(V3()), r = Math.max(b.getSize(V3()).length() / 2, 0.03);
+  const dist = Math.min(Math.max(r * 2.8, 0.17), 7) * (camera.aspect < 1.45 ? Math.min(1.9, 1.45 / camera.aspect) : 1);
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  if (state.scene === 'field' && center.y < 0) { dir.set(0.25, 0.08, 1).normalize(); }
+  else { if (dir.z < 0.3) dir.z = 0.7; dir.y = THREE.MathUtils.clamp(dir.y, 0.12, 0.65); dir.normalize(); }
+  flyTo(center.clone().add(dir.multiplyScalar(dist)), center);
+}
+const VIEWS = {
+  field: [
+    { k: 'all', label: 'Ikhtisar', pos: V3(4.3, 2.7, 5.6), target: V3(0.15, 0.55, 0.35) },
+    { k: 'box', label: 'Box', pos: V3(0.1, 1.42, 1.6), target: V3(0.01, 1.32, 0.85), act: () => { if (state.lid === 'tutup') setLid('buka'); } },
+    { k: 'top', label: 'Sensor atas', pos: V3(1.5, 2.6, 2.8), target: V3(0, 2.05, 0.75) },
+    { k: 'under', label: 'Bawah tanah', pos: V3(0.9, -0.35, 5.6), target: V3(0.05, -0.8, DZ) }
+  ],
+  bench: [
+    { k: 'all', label: 'Ikhtisar', pos: V3(0.1, 1.28, 1.02), target: V3(-0.02, 0.8, 0.0) },
+    { k: 'series', label: 'Rangkaian seri', pos: V3(-0.2, 1.02, 0.42), target: V3(-0.23, 0.77, 0.06) },
+    { k: 'mm', label: 'Multimeter', pos: V3(-0.02, 0.98, 0.4), target: V3(-0.04, 0.78, 0.15) },
+    { k: 'rx', label: 'Penerima', pos: V3(0.3, 1.03, 0.42), target: V3(0.3, 0.86, -0.13) }
+  ]
+};
+function buildViews() {
+  const v = $('views'); v.querySelectorAll('button').forEach(b => b.remove());
+  for (const p of VIEWS[state.scene]) {
+    const b = document.createElement('button'); b.className = 'db'; b.textContent = p.label;
+    b.onclick = () => { select(null); p.act && p.act(); flyTo(fit(p.pos, p.target), p.target); };
+    v.appendChild(b);
+  }
+}
+function resetView(instant) {
+  const p = VIEWS[state.scene][0];
+  const pos = fit(p.pos, p.target);
+  if (instant) { camera.position.copy(pos); controls.target.copy(p.target); tween = null; } else flyTo(pos, p.target);
+}
+
+// ---- scene switch
+function setScene(s, instant) {
+  select(null);
+  state.scene = s;
+  document.body.classList.toggle('bench', s === 'bench');
+  field.visible = s === 'field'; bench.visible = s === 'bench';
+  if (s === 'field') { scene.background = bgField; scene.fog = new THREE.Fog(FOG_FIELD, 16, 75); controls.maxPolarAngle = PI * 0.72; controls.maxDistance = 16; }
+  else { scene.background = benchBg; scene.fog = null; controls.maxPolarAngle = PI * 0.47; controls.maxDistance = 2.4; }
+  sun.position.set(...(s === 'field' ? [4.5, 8, 5.5] : [1.6, 3.2, 2.4]));
+  Object.assign(sun.shadow.camera, s === 'field' ? { left: -3.6, right: 3.6, top: 3.6, bottom: -3.6 } : { left: -1, right: 1, top: 1, bottom: -1 });
+  sun.shadow.camera.updateProjectionMatrix();
+  sun.intensity = s === 'field' ? 2.4 : 1.6;
+  document.querySelectorAll('#sceneSwitch button').forEach(b => b.classList.toggle('on', b.dataset.scene === s));
+  buildRail(); buildViews(); resetView(instant);
+  buildOccluders();
+  try { history.replaceState(null, '', s === 'bench' ? '#uji-arus' : '#lapangan'); } catch (e) {}
+}
+document.querySelectorAll('#sceneSwitch button').forEach(b => b.onclick = () => setScene(b.dataset.scene));
+
+// ---- dock controls
+function setLid(m) {
+  state.lid = m;
+  document.querySelectorAll('[data-lid]').forEach(b => b.classList.toggle('on', b.dataset.lid === m));
+  if (m === 'urai') { const t = V3(0.01, 1.33, 1.06); flyTo(fit(V3(0.14, 1.56, 1.78), t), t); }
+  occDirty = true;
+}
+document.querySelectorAll('[data-lid]').forEach(b => b.onclick = () => setLid(b.dataset.lid));
+{
+  const R = $('risk');
+  CLS.forEach(([n, css], i) => {
+    const b = document.createElement('button'); b.innerHTML = `<i style="background:${css}"></i>${n}`; b.className = i === state.k ? 'on' : '';
+    b.onclick = () => { state.k = i; R.querySelectorAll('button').forEach((x, j) => x.classList.toggle('on', j === i)); };
+    R.appendChild(b);
+  });
+}
+$('bMarkers').onclick = () => { state.markers = !state.markers; $('bMarkers').classList.toggle('on', state.markers); };
+$('bList').onclick = () => {
+  if (innerWidth <= 900) { document.body.classList.toggle('railopen'); document.body.classList.remove('railoff'); if (document.body.classList.contains('railopen')) $('card').hidden = true; }
+  else document.body.classList.toggle('railoff');
+};
+$('railClose').onclick = () => { if (innerWidth <= 900) document.body.classList.remove('railopen'); else document.body.classList.add('railoff'); };
+$('help').onclick = () => { $('helpBox').hidden = !$('helpBox').hidden; };
+function setPhoto(on) { state.photo = on; document.body.classList.toggle('photo', on); }
+$('bPhoto').onclick = () => setPhoto(true);
+$('photoExit').onclick = () => setPhoto(false);
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (state.photo) setPhoto(false); else if (state.sel) select(null); $('helpBox').hidden = true; }
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
+});
+let toastT;
+function toast(s, ms = 4200) { const t = $('toast'); t.textContent = s; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+
+// packets as expanding rings
+const rings = [];
+const ringGeo = new THREE.TorusGeometry(1, 0.01, 8, 72);
+function pulse(origin, n, gap, maxR, color) { const t0 = performance.now() / 1000; for (let i = 0; i < n; i++) rings.push({ start: t0 + i * gap, origin: origin.clone(), maxR, color, mesh: null }); }
+$('bSend').onclick = () => {
+  const tip = V3(0.56, 2.08 + 0.64, P.z), k = state.k;
+  if (k >= 1) {
+    pulse(tip, 3, 0.8, 3.2, CLS[k][2]); pulse(tip, 1, 3.0, 3.2, 0x3dbb6b);
+    if (k >= 2) state.sirenUntil = performance.now() / 1000 + 4.5;
+    toast(`ALERT kelas ${CLS[k][0]} dikirim 3× pada SF12 (±1,32 s per paket), lalu HEARTBEAT harian.${k >= 2 ? ' Sirene lokal berbunyi.' : ''}`);
+  } else { pulse(tip, 1, 0, 3.2, 0x3dbb6b); toast('Kelas Low: tidak ada ALERT. Node hanya mengirim HEARTBEAT harian (kelas, p, baterai, diagnostik).'); }
+};
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
+  benchMode = b.dataset.mode;
+  document.querySelectorAll('[data-mode]').forEach(x => x.classList.toggle('on', x === b));
+  drawMM();
+  if (benchMode === 'tx') {
+    pulse(nodeTip, 5, 1.5, 0.3, 0xff8a3d);
+    let i = 0; const iv = setInterval(() => { pushSerial(`TEST node 1 #${100 + i} class Low p 0.0000 RSSI -${38 + i}.0 SNR 10.${i}`); if (++i >= 5) clearInterval(iv); }, 1500);
+  }
+});
+$('bJumper').onclick = () => { jumper.visible = !jumper.visible; $('bJumper').classList.toggle('on', jumper.visible); occDirty = true; };
+
+// ---- picking, hover, tooltip
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+let occluders = [];
+let occDirty = true;
+function visibleChain(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function buildOccluders() {
+  occluders = [];
+  (state.scene === 'field' ? field : bench).traverse(o => { if (o.isMesh && !o.isInstancedMesh && !o.userData.bg) occluders.push(o); });
+  occDirty = true;
+}
+function pick(cx, cy) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(occluders, false);
+  let ghostHit = null;
+  for (const h of hits) {
+    const o = h.object;
+    if (o.userData.pass || !visibleChain(o)) continue;
+    if (o.material === ghostMat) { if (!ghostHit && o.userData.compId !== undefined) ghostHit = o.userData.compId; continue; }
+    return o.userData.compId ?? null;
+  }
+  return ghostHit;
+}
+let pointer = null, downXY = null;
+canvas.addEventListener('pointerdown', e => { downXY = [e.clientX, e.clientY]; state.dragging = false; $('hint').classList.add('gone'); $('helpBox').hidden = true; });
+canvas.addEventListener('pointermove', e => {
+  pointer = [e.clientX, e.clientY];
+  if (downXY && e.buttons && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 4) state.dragging = true;
+});
+canvas.addEventListener('pointerleave', () => { pointer = null; state.hover = null; });
+canvas.addEventListener('pointerup', e => {
+  const moved = downXY && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 5;
+  downXY = null; state.dragging = false;
+  if (moved || e.button !== 0) return;
+  const id = pick(e.clientX, e.clientY);
+  select(id);
+});
+canvas.addEventListener('wheel', () => $('hint').classList.add('gone'), { passive: true });
+
+function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); occDirty = true; }
+addEventListener('resize', resize);
+
+// ================================================================ loop
+const clock = new THREE.Clock();
+const tmp = V3(), lastCam = V3(), lastTgt = V3();
+let lastOcc = 0;
+function updateOcclusion(now) {
+  const camMoved = lastCam.distanceToSquared(camera.position) > 1e-6 || lastTgt.distanceToSquared(controls.target) > 1e-6;
+  if (!occDirty && !camMoved) return;
+  if (now - lastOcc < 0.12) return;
+  lastOcc = now; occDirty = false; lastCam.copy(camera.position); lastTgt.copy(controls.target);
+  for (const c of comps) {
+    if (c.scene !== state.scene) continue;
+    const wp = c.obj.localToWorld(tmp.set(c.anchor[0], c.anchor[1], c.anchor[2])).clone();
+    const dir = wp.clone().sub(camera.position); const dist = dir.length(); dir.normalize();
+    ray.set(camera.position, dir); ray.far = dist;
+    const hits = ray.intersectObjects(occluders, false);
+    c.occ = false;
+    for (const h of hits) {
+      const o = h.object;
+      if (o.userData.pass || o.material === ghostMat || !visibleChain(o)) continue;
+      if (o.userData.compId === c.id) break;
+      if (h.distance < dist - Math.max(0.02, dist * 0.015)) { c.occ = true; }
+      break;
+    }
+  }
+  ray.far = Infinity;
+}
+function updateHotspots() {
+  const Wd = innerWidth, Ht = innerHeight;
+  const cand = [];
+  for (const c of comps) {
+    let show = state.markers && !state.photo && c.scene === state.scene && visibleChain(c.obj);
+    if (show && state.sel && state.isolate && c.id !== state.sel) show = false;
+    if (show && c.inside && state.lid === 'tutup') show = false;
+    let x = 0, y = 0, d = 0;
+    if (show) {
+      const wp = c.obj.localToWorld(tmp.set(c.anchor[0], c.anchor[1], c.anchor[2]));
+      d = camera.position.distanceTo(wp);
+      wp.project(camera);
+      if (wp.z > 1 || Math.abs(wp.x) > 1.02 || Math.abs(wp.y) > 1.02) show = false;
+      x = (wp.x + 1) / 2 * Wd; y = (1 - wp.y) / 2 * Ht;
+      if (c.occ && c.id !== state.sel) show = false;
+    }
+    if (show) cand.push({ c, x, y, d }); else c.hs.style.display = 'none';
+  }
+  const hov = state.hover || state.hoverUI;
+  cand.sort((a, b) => (b.c.id === state.sel) - (a.c.id === state.sel) || (b.c.id === hov) - (a.c.id === hov) || a.d - b.d);
+  const placed = [];
+  for (const it of cand) {
+    const prio = it.c.id === state.sel || it.c.id === hov;
+    if (!prio && placed.some(p => Math.abs(p.x - it.x) < 26 && Math.abs(p.y - it.y) < 26)) { it.c.hs.style.display = 'none'; continue; }
+    placed.push(it);
+    const hs = it.c.hs;
+    hs.style.display = 'flex';
+    hs.style.transform = `translate(${Math.round(it.x - 11)}px, ${Math.round(it.y - 11)}px)`;
+    hs.classList.toggle('open', it.c.id === state.sel || it.c.id === hov);
+    hs.classList.toggle('sel', it.c.id === state.sel);
+    hs.style.zIndex = prio ? 5 : 1;
+  }
+}
+const vo = { x: 0, y: 0 };
+function updateViewOffset(dt) {
+  const w = innerWidth, h = innerHeight, card = $('card'), rail = $('rail');
+  let tx = 0, ty = 0;
+  if (!state.photo) {
+    if (w <= 900) {
+      if (!card.hidden) ty = (h - card.getBoundingClientRect().top) / 2;
+      else if (document.body.classList.contains('railopen')) ty = (h - rail.getBoundingClientRect().top) / 2;
+    } else {
+      const left = document.body.classList.contains('railoff') ? 0 : rail.getBoundingClientRect().right;
+      const right = card.hidden ? 0 : w - card.getBoundingClientRect().left;
+      tx = (right - left) / 2;
+    }
+  }
+  const k = Math.min(1, dt * 6);
+  vo.x += (tx - vo.x) * k; vo.y += (ty - vo.y) * k;
+  camera.setViewOffset(w, h, vo.x, vo.y, w, h);
+}
+let hoverCheck = 0;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05), now = performance.now() / 1000;
+  if (tween) {
+    tween.t += dt / tween.dur;
+    const k = tween.t >= 1 ? 1 : 1 - Math.pow(1 - tween.t, 3);
+    camera.position.lerpVectors(tween.p0, tween.p1, k);
+    controls.target.lerpVectors(tween.t0, tween.t1, k);
+    if (tween.t >= 1) tween = null;
+  }
+  updateViewOffset(dt);
+  controls.update();
+  if (state.anim && rotor) rotor.rotation.y += dt * 6;
+
+  // lid + exploded
+  const lidTarget = state.lid === 'tutup' ? 0 : -1.95;
+  state.lidA += (lidTarget - state.lidA) * Math.min(1, dt * 6);
+  lidPivot.rotation.y = state.lidA;
+  const ex = state.lid === 'urai' ? 1 : 0;
+  state.explodeT += (ex - state.explodeT) * Math.min(1, dt * 5);
+  for (const it of explodeItems) it.obj.position.copy(it.base).addScaledVector(it.off, state.explodeT);
+  wires.visible = state.explodeT < 0.05;
+  lidPivot.visible = state.explodeT < 0.25;
+  if (Math.abs(lidTarget - state.lidA) > 0.01 || Math.abs(ex - state.explodeT) > 0.01) occDirty = true;
+
+  // hover (throttled)
+  if (pointer && !state.dragging && now - hoverCheck > 0.05) {
+    hoverCheck = now;
+    state.hover = pick(pointer[0], pointer[1]);
+    canvas.classList.toggle('pointer', !!state.hover);
+  }
+  const tip = $('tip');
+  if (state.hover && pointer && !state.dragging) {
+    const c = comps.find(x => x.id === state.hover);
+    tip.innerHTML = `<b>${c.num}</b> · ${c.short}<small>${c.id === state.sel ? '' : 'klik untuk detail'}</small>`;
+    tip.style.display = 'block'; tip.style.left = (pointer[0] + 14) + 'px'; tip.style.top = (pointer[1] + 16) + 'px';
+  } else tip.style.display = 'none';
+
+  // emissive feedback
+  const hov = state.hover || state.hoverUI;
+  for (const c of comps) {
+    if (c.scene !== state.scene) continue;
+    if (c.id === state.sel) setEmissive(c, 0x2a6cff, 0.12 + 0.12 * (0.5 + 0.5 * Math.sin(now * 3.5)));
+    else if (c.id === hov) setEmissive(c, 0x2a6cff, 0.28);
+    else if (c.tinted) clearEmissive(c);
+  }
+  // risk LED + siren
+  const kc = CLS[state.k][2];
+  if (ledMat !== undefined) { ledMat.color.setHex(kc); ledMat.emissive.setHex(kc); ledMat.emissiveIntensity = state.anim ? 1.2 + 0.5 * Math.sin(now * 3) : 1.4; }
+  if (now < state.sirenUntil) { sirenMat.emissive.setHex(0xff2a10); sirenMat.emissiveIntensity = Math.sin(now * 18) > 0 ? 1.6 : 0.1; }
+  else if (state.sel !== 'siren' && hov !== 'siren') sirenMat.emissive.setHex(0x000000);
+
+  // rings
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const r = rings[i], age = now - r.start;
+    if (age < 0) continue;
+    if (!r.mesh) { r.mesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.9, depthWrite: false })); r.mesh.rotation.x = PI / 2; r.mesh.position.copy(r.origin); scene.add(r.mesh); }
+    const u = age / 1.8;
+    if (u >= 1) { scene.remove(r.mesh); r.mesh.material.dispose(); rings.splice(i, 1); continue; }
+    const rad = 0.02 + u * r.maxR; r.mesh.scale.set(rad, rad, r.maxR < 1 ? rad * 0.4 : rad);
+    r.mesh.material.opacity = 0.9 * (1 - u);
+  }
+
+  updateOcclusion(now);
+  updateHotspots();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+// ================================================================ start
+resize();
+setScene(location.hash === '#uji-arus' ? 'bench' : 'field', true);
+if (innerWidth <= 900) document.body.classList.remove('railopen');
+$('loading').remove();
+setTimeout(() => $('hint').classList.add('gone'), 12000);
+requestAnimationFrame(frame);
+window.__pg = { comps: comps.length, ready: true };
+</script>
+</body>
+</html>
